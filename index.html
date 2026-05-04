@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sony Style Unified Player</title>
+
+<link href="https://fonts.cdnfonts.com/css/digital-7-mono" rel="stylesheet">
+
+<link rel="preload" href="backgrounds/bg_day1.jpg" as="image" fetchpriority="high">
+<link rel="preload" href="backgrounds/bg_day2.jpg" as="image" fetchpriority="high">
+<link rel="preload" href="backgrounds/bg_day3.jpg" as="image" fetchpriority="high">
+<link rel="preload" href="backgrounds/bg_night1.jpg" as="image" fetchpriority="high">
+<link rel="preload" href="backgrounds/bg_night2.jpg" as="image" fetchpriority="high">
+<link rel="preload" href="backgrounds/bg_night3.jpg" as="image" fetchpriority="high">
+
+<style>
+:root {
+    --bg-main: #050608;
+    --bg-panel: #111319;
+    --bg-button: #1b1e26;
+    --bg-button-active: #ff7a00;
+    --bg-button-active-inner: #ff9a2e;
+    --bg-button-border: #2a2e3a;
+    --text-main: #f5f5f5;
+    --text-dim: #aaaaaa;
+    --accent: #ff7a00;
+    --accent-soft: #ffb15a;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+    background: #000;
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+.player-shell {
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    border-radius: 0;
+    box-shadow: none;
+
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    padding: 0;
+    width: 520px;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+
+/* LED SCREEN */
+.radio-screen {
+    width: 100%;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255, 0, 0, 0.02) 0px,
+            rgba(255, 0, 0, 0.02) 1px,
+            transparent 1px,
+            transparent 3px
+        ),
+        rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+    margin-bottom: 12px;
+    min-height: 90px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    box-sizing: border-box;
+}
+
+/* MAIN LED TEXT */
+.radio-screen-line1,
+.radio-screen-line2 {
+    font-family: "Digital-7 Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #ffd08a;
+    font-size: 22px;
+    text-shadow:
+        0 0 1px rgba(255, 200, 120, 1),
+        0 0 2px rgba(255, 170, 80, 0.9);
+    line-height: 24px;
+    height: 24px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* SMALLER MP3 TITLE */
+.radio-screen-line2.mp3-title {
+    font-size: 14px;
+    line-height: 14px;
+    letter-spacing: 0.05em;
+    color: #ffb15a !important;
+    text-shadow:
+        0 0 1px rgba(255, 180, 80, 1),
+        0 0 2px rgba(255, 150, 60, 0.9);
+}
+
+.live-red {
+    color: #ff2600 !important;
+    text-shadow:
+        0 0 1px rgba(255, 0, 0, 1),
+        0 0 2px rgba(255, 0, 0, 0.9);
+}
+
+/* TOP ROW */
+.led-top-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    padding: 0 2px;
+}
+
+.led-bars {
+    height: 16px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.led-bars span {
+    display: inline-block;
+    width: 3px;
+    height: 10px;
+    margin-right: 2px;
+    background: #ffd08a;
+    opacity: 0.25;
+    transform-origin: bottom;
+}
+
+.led-bars.playing span {
+    animation: waveform 0.9s infinite ease-in-out;
+}
+
+.led-bars.playing span:nth-child(1) { animation-delay: 0s; }
+.led-bars.playing span:nth-child(2) { animation-delay: 0.12s; }
+.led-bars.playing span:nth-child(3) { animation-delay: 0.24s; }
+.led-bars.playing span:nth-child(4) { animation-delay: 0.36s; }
+.led-bars.playing span:nth-child(5) { animation-delay: 0.48s; }
+
+@keyframes waveform {
+    0%   { height: 6px; opacity: 0.5; }
+    25%  { height: 14px; opacity: 0.9; }
+    50%  { height: 10px; opacity: 0.7; }
+    75%  { height: 16px; opacity: 1; }
+    100% { height: 8px; opacity: 0.6; }
+}
+
+/* RADIO / USB */
+.led-inputs span {
+    font-family: "Digital-7 Mono", monospace;
+    font-size: 14px;
+    color: #ffd08a;
+    margin-left: 8px;
+    opacity: 0.35;
+}
+
+.led-inputs .active {
+    opacity: 1;
+}
+
+/* VOL */
+.led-bottom-row {
+    text-align: left;
+    padding-left: 2px;
+    margin-top: 4px;
+}
+
+#ledVol {
+    font-family: "Digital-7 Mono", monospace;
+    font-size: 14px;
+    color: #ffd08a;
+    opacity: 0.35;
+}
+
+#ledVol.playing {
+    opacity: 1;
+}
+
+/* BACKGROUND */
+#bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: -3;
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: transparent;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* MODE BUTTONS */
+.mode-row {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 12px;
+}
+
+.mode-btn {
+    flex: 1;
+    background: var(--bg-button);
+    border-radius: 6px;
+    border: 1px solid var(--bg-button-border);
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 7px 4px;
+    cursor: pointer;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.03),
+        0 0 0 1px #000,
+        inset 0 0 0 1px rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: box-shadow 0.25s ease, transform 0.1s ease;
+}
+
+.mode-btn.active {
+    background: var(--bg-button-active);
+    border-color: #ffb15a;
+    color: #1b0b00;
+    box-shadow:
+        0 0 0 1px #000,
+        inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+        0 0 18px rgba(255, 122, 0, 0.9);
+    transform: translateY(1px);
+}
+
+/* MP3 CONTROL ROW */
+.mp3-controls-row {
+    display: none;
+    margin-top: 12px;
+    justify-content: center;
+    gap: 14px;
+}
+
+.control-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    border: 1px solid #2b3040;
+    background: radial-gradient(circle at top, #262a38, #141722);
+    color: #ffb15a;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.04),
+        0 0 0 1px #000,
+        inset 0 0 0 1px rgba(0,0,0,0.7);
+    transition: transform 0.1s ease;
+}
+
+.control-btn:active {
+    transform: translateY(1px);
+}
+
+.mp3-circle-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid #2b3040;
+    background: radial-gradient(circle at top, #262a38, #141722);
+    color: #ffb15a;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.04),
+        0 0 0 1px #000,
+        inset 0 0 0 1px rgba(0,0,0,0.7);
+    transition: transform 0.1s ease;
+}
+
+.mp3-circle-btn:active {
+    transform: translateY(1px);
+}
+
+/* TRANSPORT CONTROLS */
+.transport-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 22px;
+    margin-top: 18px;
+}
+
+.transport-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    border: 1px solid #2b3040;
+    background: radial-gradient(circle at top, #262a38, #141722);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04),
+        0 0 0 1px #000,
+        inset 0 0 0 1px rgba(0, 0, 0, 0.7);
+}
+
+.transport-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--accent-soft);
+}
+
+.transport-btn:active {
+    transform: translateY(1px);
+}
+
+/* VOLUME ROW */
+.volume-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 16px 0 4px;
+}
+
+.vol-btn {
+    width: 70px;
+    height: 34px;
+    border-radius: 6px;
+    border: 1px solid #2b3040;
+    background: radial-gradient(circle at top, #262a38, #141722);
+    color: #ffb15a;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.04),
+        0 0 0 1px #000,
+        inset 0 0 0 1px rgba(0,0,0,0.7);
+}
+
+.vol-btn:active {
+    transform: translateY(1px);
+}
+
+.vol-slider {
+    width: 220px;
+    height: 4px;
+    appearance: none;
+    background: #333;
+    border-radius: 4px;
+    outline: none;
+}
+
+.vol-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: #555;
+    border-radius: 4px;
+}
+
+.vol-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #ffb15a;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -5px;
+}
+
+/* ===========================
+   MSN CHAT BOX (FINAL VERSION)
+   =========================== */
+
+.msn-window {
+    width: 260px;
+    height: 190px;
+
+    background: rgba(255, 255, 255, 0.008); /* almost invisible */
+    border: 1px solid rgba(255, 255, 255, 0.02); /* faint outline */
+    border-radius: 12px;
+
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.01),
+        0 3px 10px rgba(0,0,0,0.12); /* very soft float */
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 6px;
+    margin-top: 320px;
+    margin-left: 30px;
+}
+
+
+.msn-messages {
+    flex: 1;
+    overflow-y: auto;
+
+    background: rgba(0,0,0,0.06); /* extremely soft */
+    border-radius: 6px;
+
+    padding: 4px;
+    font-size: 12px;
+    color: #fff;
+}
+
+
+
+
+.msn-toolbar img {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    opacity: 0.75; /* softer */
+    transition: opacity 0.15s ease;
+}
+
+.msn-toolbar img:hover {
+    opacity: 1;
+}
+
+
+.msn-input-area {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.msn-input {
+    flex: 1;
+    min-height: 22px;
+    font-size: 12px;
+    padding: 5px;
+
+    background: rgba(255,255,255,0.05); /* softer */
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+
+    color: #fff;
+    outline: none;
+}
+
+
+.msn-send {
+    width: 55px;
+    font-size: 12px;
+    padding: 5px;
+
+    background: rgba(255,255,255,0.05); /* soft */
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+
+    cursor: pointer;
+    color: #fff;
+}
+
+.msn-send:hover {
+    background: rgba(255,255,255,0.10); /* gentle hover */
+}
+
+.msg {
+    margin-bottom: 5px;
+    padding: 4px 5px;
+    background: rgba(255,255,255,0.20);
+    border-radius: 4px;
+    width: fit-content;
+    max-width: 90%;
+    font-size: 11px;
+    color: #222;
+}
+
+.msg.you {
+    margin-left: 0;
+}
+
+#visitorsToday {
+    position: fixed;
+    top: 520px;      /* adjust depending on your chat box height */
+    left: 30px;      /* aligns with chat box left edge */
+
+    font-size: 10px;
+    letter-spacing: 0.5px;
+
+    color: rgba(255,255,255,0.55); /* softer white */
+    text-shadow: 0 0 3px rgba(0,0,0,0.35);
+
+    pointer-events: none;
+    z-index: 9999;
+}
+
+
+
+
+</style>
+</head>
+
+<body>
+
+<div id="bg"></div>
+<div id="overlay"></div>
+
+<div class="player-shell">
+
+    <div id="radioScreen" class="radio-screen">
+        <div class="led-top-row">
+            <div class="led-bars">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="led-inputs">
+                <span id="ledRadio">RADIO</span>
+                <span id="ledUsb">USB</span>
+            </div>
+        </div>
+
+<div id="visitorsToday">Today’s visitors (…)</div>
+
+
+        <div id="radioScreenLine1" class="radio-screen-line1"></div>
+        <div id="radioScreenLine2" class="radio-screen-line2"></div>
+
+        <div class="led-bottom-row">
+            <span id="ledVol">VOL 50%</span>
+        </div>
+    </div>
+
+    <div class="mode-row">
+        <button class="mode-btn" id="btnRadio"><span>RADIO</span></button>
+        <button class="mode-btn" id="btnMp3_1"><span>MP3 PLAYER 1</span></button>
+        <button class="mode-btn" id="btnMp3_2"><span>MP3 PLAYER 2</span></button>
+    </div>
+
+    <div class="mp3-controls-row">
+        <button id="mp3-back15" class="control-btn">-15</button>
+        <button id="mp3-playpause" class="mp3-circle-btn">▶</button>
+        <button id="mp3-next" class="mp3-circle-btn">⏭</button>
+        <button id="mp3-forward15" class="control-btn">+15</button>
+    </div>
+
+    <div class="transport-row">
+        <button class="transport-btn" id="btnPrev">
+            <svg viewBox="0 0 24 24">
+                <polygon points="15,5 6,12 15,19"></polygon>
+                <rect x="16" y="5" width="2" height="14"></rect>
+            </svg>
+        </button>
+
+        <button class="transport-btn" id="btnPlayPause">
+            <svg id="iconPlay" viewBox="0 0 24 24">
+                <polygon points="8,5 19,12 8,19"></polygon>
+            </svg>
+            <svg id="iconPause" viewBox="0 0 24 24" style="display:none;">
+                <rect x="7" y="5" width="4" height="14"></rect>
+                <rect x="13" y="5" width="4" height="14"></rect>
+            </svg>
+        </button>
+
+        <button class="transport-btn" id="btnNext">
+            <svg viewBox="0 0 24 24">
+                <polygon points="6,5 15,12 6,19"></polygon>
+                <rect x="17" y="5" width="2" height="14"></rect>
+            </svg>
+        </button>
+    </div>
+
+    <div class="volume-row">
+        <button id="volDown" class="vol-btn">VOL −</button>
+        <input id="volSlider" type="range" min="0" max="100" value="50" class="vol-slider">
+        <button id="volUp" class="vol-btn">VOL +</button>
+    </div>
+
+    <audio id="audioRadio"></audio>
+    <audio id="audioMp3_1"></audio>
+    <audio id="audioMp3_2"></audio>
+
+</div> <!-- END OF PLAYER SHELL -->
+
+<!-- CHAT BOX -->
+<div class="msn-window">
+
+    <div class="msn-messages" id="chatMessages"></div>
+
+    <div class="msn-toolbar">
+        <img src="emotes/1.png" onclick="addEmote('1.png')">
+        <img src="emotes/2.png" onclick="addEmote('2.png')">
+        <img src="emotes/3.png" onclick="addEmote('3.png')">
+        <img src="emotes/4.png" onclick="addEmote('4.png')">
+        <img src="emotes/5.png" onclick="addEmote('5.png')">
+        <img src="emotes/6.gif" onclick="addEmote('6.gif')">
+        <img src="emotes/7.png" onclick="addEmote('7.png')">
+    </div>
+
+    <div class="msn-input-area">
+        <div id="chatInput" class="msn-input" contenteditable="true"></div>
+        <button class="msn-send" onclick="sendMessage()">Send</button>
+    </div>
+
+</div>
+
+     
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const btnRadio = document.getElementById("btnRadio");
+    const btnMp3_1 = document.getElementById("btnMp3_1");
+    const btnMp3_2 = document.getElementById("btnMp3_2");
+
+    const btnPrev = document.getElementById("btnPrev");
+    const btnPlayPause = document.getElementById("btnPlayPause");
+    const btnNext = document.getElementById("btnNext");
+
+    const iconPlay = document.getElementById("iconPlay");
+    const iconPause = document.getElementById("iconPause");
+
+    const audioRadio = document.getElementById("audioRadio");
+    audioRadio.preload = "auto";
+
+    const audioMp3_1 = document.getElementById("audioMp3_1");
+    audioMp3_1.preload = "auto";
+
+    const audioMp3_2 = document.getElementById("audioMp3_2");
+    audioMp3_2.preload = "auto";
+
+    const radioScreenLine1 = document.getElementById("radioScreenLine1");
+    const radioScreenLine2 = document.getElementById("radioScreenLine2");
+
+    const transportRow = document.querySelector(".transport-row");
+    const mp3ControlsRow = document.querySelector(".mp3-controls-row");
+
+    const ledRadio = document.getElementById("ledRadio");
+    const ledUsb = document.getElementById("ledUsb");
+    const ledVol = document.getElementById("ledVol");
+
+    const volSlider = document.getElementById("volSlider");
+    const volUp = document.getElementById("volUp");
+    const volDown = document.getElementById("volDown");
+
+    const mp3Back15 = document.getElementById("mp3-back15");
+    const mp3PlayPause = document.getElementById("mp3-playpause");
+    const mp3Next = document.getElementById("mp3-next");
+    const mp3Forward15 = document.getElementById("mp3-forward15");
+
+    const MODE_RADIO = "radio";
+    const MODE_MP3_1 = "mp3_1";
+    const MODE_MP3_2 = "mp3_2";
+
+    let currentMode = null;
+    let isPlaying = false;
+    let currentRadioIndex = 0;
+
+async function updateVisitorCount() {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const namespace = "ben_sony_ui";
+    const key = "visitors_" + today;
+
+    try {
+        const res = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+        const data = await res.json();
+
+        document.getElementById("visitorsToday").textContent =
+            `today’s visitors (${data.value})`;
+    } catch (err) {
+        console.log("Visitor counter error:", err);
+    }
+}
+
+updateVisitorCount();
+
+
+
+
+
+    /* PLAYLISTS — add your real ones later */
+    const playlist1 = [
+ { name: "YoungMoney - BedRock.mp3", url: "Songs 1/YoungMoney - BedRock.mp3" },
+  { name: "3SL - Touch Me Tease Me.mp3", url: "Songs 1/3SL - Touch Me Tease Me.mp3" },
+  { name: "911 - Dont Take Away The Music.mp3", url: "Songs 1/911 - Dont Take Away The Music.mp3" },
+  { name: "911 - The Day We Find Love.mp3", url: "Songs 1/911 - The Day We Find Love.mp3" },
+  { name: "A Teens - I Promised Myself.mp3", url: "Songs 1/A Teens - I Promised Myself.mp3" },
+  { name: "A1 - Let It Out.mp3", url: "Songs 1/A1 - Let It Out.mp3" },
+  { name: "A1 - Make It Good.mp3", url: "Songs 1/A1 - Make It Good.mp3" },
+  { name: "A1 - One Last Song.mp3", url: "Songs 1/A1 - One Last Song.mp3" },
+  { name: "Aaron Carter - Keep Believing.mp3", url: "Songs 1/Aaron Carter - Keep Believing.mp3" },
+  { name: "Abs - Angel.mp3", url: "Songs 1/Abs - Angel.mp3" },
+  { name: "Abs - Back To The Limbo.mp3", url: "Songs 1/Abs - Back To The Limbo.mp3" },
+  { name: "Abs - Lovers Rock.mp3", url: "Songs 1/Abs - Lovers Rock.mp3" },
+  { name: "Adam Levine - No One Else Like You.mp3", url: "Songs 1/Adam Levine - No One Else Like You.mp3" },
+  { name: "Adele - Chasing Pavements.mp3", url: "Songs 1/Adele - Chasing Pavements.mp3" },
+  { name: "Akcent - Passion.mp3", url: "Songs 1/Akcent - Passion.mp3" },
+  { name: "Akon - Right Now.mp3", url: "Songs 1/Akon - Right Now.mp3" },
+  { name: "Alesha Dixon - Breathe Slow.mp3", url: "Songs 1/Alesha Dixon - Breathe Slow.mp3" },
+  { name: "Alexander ONeal - The Lovers.mp3", url: "Songs 1/Alexander ONeal - The Lovers.mp3" },
+  { name: "Alexandra Burke - All Night Long.mp3", url: "Songs 1/Alexandra Burke - All Night Long.mp3" },
+  { name: "Alibi - How Much I Feel.mp3", url: "Songs 1/Alibi - How Much I Feel.mp3" },
+  { name: "Alicia Keys - Try Sleeping With A Broken Heart.mp3", url: "Songs 1/Alicia Keys - Try Sleeping With A Broken Heart.mp3" },
+  { name: "All Saints - Black Coffee.mp3", url: "Songs 1/All Saints - Black Coffee.mp3" },
+  { name: "Amber - One More Night.mp3", url: "Songs 1/Amber - One More Night.mp3" },
+  { name: "Andrew Gold - Never Let Her Slip Away.mp3", url: "Songs 1/Andrew Gold - Never Let Her Slip Away.mp3" },
+  { name: "Another Level - I Want You For Myself (Full Intention Radio Edit).mp3", url: "Songs 1/Another Level - I Want You For Myself (Full Intention Radio Edit).mp3" },
+  { name: "Ant  Dec - Falling.mp3", url: "Songs 1/Ant  Dec - Falling.mp3" },
+  { name: "Avril Lavigne - Im With You.mp3", url: "Songs 1/Avril Lavigne - Im With You.mp3" },
+  { name: "Baby D - Let Me Be Your Fantasy.mp3", url: "Songs 1/Baby D - Let Me Be Your Fantasy.mp3" },
+  { name: "Backstreet Boys - Dont Wanna Lose You Now.mp3", url: "Songs 1/Backstreet Boys - Dont Wanna Lose You Now.mp3" },
+  { name: "Basshunter - I Miss You.mp3", url: "Songs 1/Basshunter - I Miss You.mp3" },
+  { name: "Ben Montague - Love Like Stars.mp3", url: "Songs 1/Ben Montague - Love Like Stars.mp3" },
+  { name: "Beyonce - xo.mp3", url: "Songs 1/Beyonce - xo.mp3" },
+  { name: "Big Time Rush - No Idea.mp3", url: "Songs 1/Big Time Rush - No Idea.mp3" },
+  { name: "Black Eyed Peas - Meet Me Halfway.mp3", url: "Songs 1/Black Eyed Peas - Meet Me Halfway.mp3" },
+  { name: "Blue - If You Come Back.mp3", url: "Songs 1/Blue - If You Come Back.mp3" },
+  { name: "Bob Sinclar - Love Generation.mp3", url: "Songs 1/Bob Sinclar - Love Generation.mp3" },
+  { name: "Bobby Brown - Two Can Play That Game.mp3", url: "Songs 1/Bobby Brown - Two Can Play That Game.mp3" },
+  { name: "Booty Luv - Boogie 2nite.mp3", url: "Songs 1/Booty Luv - Boogie 2nite.mp3" },
+  { name: "Boy Meets Girl - Waiting For A Star To Fall.mp3", url: "Songs 1/Boy Meets Girl - Waiting For A Star To Fall.mp3" },
+  { name: "Boyzone - Coming Home Now.mp3", url: "Songs 1/Boyzone - Coming Home Now.mp3" },
+  { name: "Boyzone - Give A Little.mp3", url: "Songs 1/Boyzone - Give A Little.mp3" },
+  { name: "Breathe - Say A Prayer.mp3", url: "Songs 1/Breathe - Say A Prayer.mp3" },
+  { name: "Britney Spears - Sometimes.mp3", url: "Songs 1/Britney Spears - Sometimes.mp3" },
+  { name: "BT - Loving You More.mp3", url: "Songs 1/BT - Loving You More.mp3" },
+  { name: "C21 - Tell Me Why It Aint Easy.mp3", url: "Songs 1/C21 - Tell Me Why It Aint Easy.mp3" },
+  { name: "Cahill - Trippin On You.mp3", url: "Songs 1/Cahill - Trippin On You.mp3" },
+  { name: "Calvin Harris - Sweet Nothing.mp3", url: "Songs 1/Calvin Harris - Sweet Nothing.mp3" },
+  { name: "Calvin Harris Ft Kelis - Bounce.mp3", url: "Songs 1/Calvin Harris Ft Kelis - Bounce.mp3" },
+  { name: "Camila Cabello - Crying In The Club.mp3", url: "Songs 1/Camila Cabello - Crying In The Club.mp3" },
+  { name: "Cathy Dennis - Cmon And Get My Love.mp3", url: "Songs 1/Cathy Dennis - Cmon And Get My Love.mp3" },
+  { name: "CC Music Factory - I Found Love.mp3", url: "Songs 1/CC Music Factory - I Found Love.mp3" },
+  { name: "Chesney Hawkes - The One And Only.mp3", url: "Songs 1/Chesney Hawkes - The One And Only.mp3" },
+  { name: "Chicane - Poppiholla.mp3", url: "Songs 1/Chicane - Poppiholla.mp3" },
+  { name: "Chris Brown - With You.mp3", url: "Songs 1/Chris Brown - With You.mp3" },
+  { name: "Chris Brown - Yeah3x.mp3", url: "Songs 1/Chris Brown - Yeah3x.mp3" },
+  { name: "Christina Aguilera - Tell Me.mp3", url: "Songs 1/Christina Aguilera - Tell Me.mp3" },
+  { name: "Christina Aguilera - The Voice Within.mp3", url: "Songs 1/Christina Aguilera - The Voice Within.mp3" },
+  { name: "Christina Milian - Its All Gravy.mp3", url: "Songs 1/Christina Milian - Its All Gravy.mp3" },
+  { name: "CJ Lewis - Sweets For My Sweet.mp3", url: "Songs 1/CJ Lewis - Sweets For My Sweet.mp3" },
+  { name: "Craig David - Heartline.mp3", url: "Songs 1/Craig David - Heartline.mp3" },
+  { name: "Cynthia - Change On Me.mp3", url: "Songs 1/Cynthia - Change On Me.mp3" },
+  { name: "Da Buzz - Do You Want Me.mp3", url: "Songs 1/Da Buzz - Do You Want Me.mp3" },
+  { name: "Dannii Minogue - Boogie Woogie Club Mix.mp3", url: "Songs 1/Dannii Minogue - Boogie Woogie Club Mix.mp3" },
+  { name: "Dannii Minogue - This Is It.mp3", url: "Songs 1/Dannii Minogue - This Is It.mp3" },
+  { name: "David Guetta - Just A Little More Love.mp3", url: "Songs 1/David Guetta - Just A Little More Love.mp3" },
+  { name: "David Sneddon - Dont Let Go.mp3", url: "Songs 1/David Sneddon - Dont Let Go.mp3" },
+  { name: "Deee-Lite - Groove Is In The Heart.mp3", url: "Songs 1/Deee-Lite - Groove Is In The Heart.mp3" },
+  { name: "Dizzee Rascal - Holiday.mp3", url: "Songs 1/Dizzee Rascal - Holiday.mp3" },
+  { name: "DJ Dado - Ready Or Not.mp3", url: "Songs 1/DJ Dado - Ready Or Not.mp3" },
+  { name: "DJ Sammy - Boys Of Summer.mp3", url: "Songs 1/DJ Sammy - Boys Of Summer.mp3" },
+  { name: "Eagle Eye - Long Way Around.mp3", url: "Songs 1/Eagle Eye - Long Way Around.mp3" },
+  { name: "East 17 - Betcha Cant Wait.mp3", url: "Songs 1/East 17 - Betcha Cant Wait.mp3" },
+  { name: "Electric Light Orchestra - Confusion.mp3", url: "Songs 1/Electric Light Orchestra - Confusion.mp3" },
+  { name: "Ellie Goulding - Still Falling For You.mp3", url: "Songs 1/Ellie Goulding - Still Falling For You.mp3" },
+  { name: "Elton John - Sacrifice.mp3", url: "Songs 1/Elton John - Sacrifice.mp3" },
+  { name: "Emeli Sande - Next To Me.mp3", url: "Songs 1/Emeli Sande - Next To Me.mp3" },
+  { name: "Enrique Iglesias - Do You Know.mp3", url: "Songs 1/Enrique Iglesias - Do You Know.mp3" },
+  { name: "Enrique Iglesias - I Like It.mp3", url: "Songs 1/Enrique Iglesias - I Like It.mp3" },
+  { name: "Erasure - A Little Respect.mp3", url: "Songs 1/Erasure - A Little Respect.mp3" },
+  { name: "Erasure - Star.mp3", url: "Songs 1/Erasure - Star.mp3" },
+  { name: "Eruption - I Cant Stand The Rain.mp3", url: "Songs 1/Eruption - I Cant Stand The Rain.mp3" },
+  { name: "Eternal - Angel Of Mine.mp3", url: "Songs 1/Eternal - Angel Of Mine.mp3" },
+  { name: "Eternal - Good Thing.mp3", url: "Songs 1/Eternal - Good Thing.mp3" },
+  { name: "Eternal - So Good.mp3", url: "Songs 1/Eternal - So Good.mp3" },
+  { name: "Eyeopener - Hungry Eyes.mp3", url: "Songs 1/Eyeopener - Hungry Eyes.mp3" },
+  { name: "Faith Hill - There Youll Be.mp3", url: "Songs 1/Faith Hill - There Youll Be.mp3" },
+  { name: "Fierce - Right Here Right Now.mp3", url: "Songs 1/Fierce - Right Here Right Now.mp3" },
+  { name: "Five - Its The Things You Do.mp3", url: "Songs 1/Five - Its The Things You Do.mp3" },
+  { name: "Flo Rida Ft David Guetta - Club Cant Handle Me.mp3", url: "Songs 1/Flo Rida Ft David Guetta - Club Cant Handle Me.mp3" },
+  { name: "Gabrielle - Dont Need The Sun To Shine (To Make Me Smile).mp3", url: "Songs 1/Gabrielle - Dont Need The Sun To Shine (To Make Me Smile).mp3" },
+  { name: "Gabrielle - Give Me A Little More Time.mp3", url: "Songs 1/Gabrielle - Give Me A Little More Time.mp3" },
+  { name: "Gabrielle - I Wish (Club Mix).mp3", url: "Songs 1/Gabrielle - I Wish (Club Mix).mp3" },
+  { name: "Gabrielle - Sunshine.mp3", url: "Songs 1/Gabrielle - Sunshine.mp3" },
+  { name: "Gary Barlow - Stronger.mp3", url: "Songs 1/Gary Barlow - Stronger.mp3" },
+  { name: "George Harrison - My Sweet Lord.mp3", url: "Songs 1/George Harrison - My Sweet Lord.mp3" },
+  { name: "George Michael - Amazing.mp3", url: "Songs 1/George Michael - Amazing.mp3" },
+  { name: "George Michael - Heal The Pain.mp3", url: "Songs 1/George Michael - Heal The Pain.mp3" },
+  { name: "Girls Cant Catch - Echo.mp3", url: "Songs 1/Girls Cant Catch - Echo.mp3" },
+  { name: "Groove Armada - Song 4 Mutya.mp3", url: "Songs 1/Groove Armada - Song 4 Mutya.mp3" },
+  { name: "Gwen Stefani - Cool.mp3", url: "Songs 1/Gwen Stefani - Cool.mp3" },
+  { name: "Hi Five - I Like The Way.mp3", url: "Songs 1/Hi Five - I Like The Way.mp3" },
+  { name: "Honeyz - Finally Found.mp3", url: "Songs 1/Honeyz - Finally Found.mp3" },
+  { name: "Huey Lewis And The News - Heart And Soul.mp3", url: "Songs 1/Huey Lewis And The News - Heart And Soul.mp3" },
+  { name: "Inna - Hot.mp3", url: "Songs 1/Inna - Hot.mp3" },
+  { name: "Jackson Browne - Somebodys Baby (Live).mp3", url: "Songs 1/Jackson Browne - Somebodys Baby (Live).mp3" },
+  { name: "James Morrison - Please Dont Stop The Rain.mp3", url: "Songs 1/James Morrison - Please Dont Stop The Rain.mp3" },
+  { name: "James Morrison - Save Yourself.mp3", url: "Songs 1/James Morrison - Save Yourself.mp3" },
+  { name: "James Morrison - You Make It Real.mp3", url: "Songs 1/James Morrison - You Make It Real.mp3" },
+  { name: "James Morrison Ft Nelly Furtado - Broken Strings.mp3", url: "Songs 1/James Morrison Ft Nelly Furtado - Broken Strings.mp3" },
+  { name: "Janet Jackson - Again.mp3", url: "Songs 1/Janet Jackson - Again.mp3" },
+  { name: "Janet Jackson - Because Of You.mp3", url: "Songs 1/Janet Jackson - Because Of You.mp3" },
+  { name: "Janet Jackson - Lets Wait A While.mp3", url: "Songs 1/Janet Jackson - Lets Wait A While.mp3" },
+  { name: "Jason Derulo - The Skys The Limit.mp3", url: "Songs 1/Jason Derulo - The Skys The Limit.mp3" },
+  { name: "Jay Sean - Do You Remember.mp3", url: "Songs 1/Jay Sean - Do You Remember.mp3" },
+  { name: "Jay Sean - Down.mp3", url: "Songs 1/Jay Sean - Down.mp3" },
+  { name: "Jay Sean Ft Nicki Minaj - 2012 (It Aint The End).mp3", url: "Songs 1/Jay Sean Ft Nicki Minaj - 2012 (It Aint The End).mp3" },
+  { name: "Jennifer Lopez - Waiting For Tonight.mp3", url: "Songs 1/Jennifer Lopez - Waiting For Tonight.mp3" },
+  { name: "Jerome Stocks - Baby I Need Your Lovin.mp3", url: "Songs 1/Jerome Stocks - Baby I Need Your Lovin.mp3" },
+  { name: "Jesse McCartney - How Do You Sleep.mp3", url: "Songs 1/Jesse McCartney - How Do You Sleep.mp3" },
+  { name: "Jessie J - Domino.mp3", url: "Songs 1/Jessie J - Domino.mp3" },
+  { name: "JLS - Close To You.mp3", url: "Songs 1/JLS - Close To You.mp3" },
+  { name: "JLS - Eyes Wide Shut.mp3", url: "Songs 1/JLS - Eyes Wide Shut.mp3" },
+  { name: "JLS - One Shot.mp3", url: "Songs 1/JLS - One Shot.mp3" },
+  { name: "JLS - She Makes Me Wanna.mp3", url: "Songs 1/JLS - She Makes Me Wanna.mp3" },
+  { name: "JLS - Teach Me How To Dance.mp3", url: "Songs 1/JLS - Teach Me How To Dance.mp3" },
+  { name: "Jody Watley - Everything.mp3", url: "Songs 1/Jody Watley - Everything.mp3" },
+  { name: "Joey Lawrence - I Cant Help Myself.mp3", url: "Songs 1/Joey Lawrence - I Cant Help Myself.mp3" },
+  { name: "Jordan Cahill - On Top Of the World.mp3", url: "Songs 1/Jordan Cahill - On Top Of the World.mp3" },
+  { name: "JP Cooper - Passport Home.mp3", url: "Songs 1/JP Cooper - Passport Home.mp3" },
+  { name: "Justin Bieber - Never Let You Go.mp3", url: "Songs 1/Justin Bieber - Never Let You Go.mp3" },
+  { name: "Justin Timberlake - Cant Stop The Feeling.mp3", url: "Songs 1/Justin Timberlake - Cant Stop The Feeling.mp3" },
+  { name: "Justin Timberlake - My Love.mp3", url: "Songs 1/Justin Timberlake - My Love.mp3" },
+  { name: "Justin Timberlake - Rock Your Body.mp3", url: "Songs 1/Justin Timberlake - Rock Your Body.mp3" },
+  { name: "Katy B - Anywhere In The World.mp3", url: "Songs 1/Katy B - Anywhere In The World.mp3" },
+  { name: "Katy Perry - Thinking Of You.mp3", url: "Songs 1/Katy Perry - Thinking Of You.mp3" },
+  { name: "Kavana - Misunderstood.mp3", url: "Songs 1/Kavana - Misunderstood.mp3" },
+  { name: "Keane - Bend and Break.mp3", url: "Songs 1/Keane - Bend and Break.mp3" },
+  { name: "Kelly Rowland - When Love Takes Over.mp3", url: "Songs 1/Kelly Rowland - When Love Takes Over.mp3" },
+  { name: "Kym Sims - Take My Advice.mp3", url: "Songs 1/Kym Sims - Take My Advice.mp3" },
+  { name: "Kym Sims - Too Blind To See It.mp3", url: "Songs 1/Kym Sims - Too Blind To See It.mp3" },
+  { name: "Lady Gaga - Born This Way.mp3", url: "Songs 1/Lady Gaga - Born This Way.mp3" },
+  { name: "Lawson - When She Was Mine.mp3", url: "Songs 1/Lawson - When She Was Mine.mp3" },
+  { name: "Lee West - Wishing.mp3", url: "Songs 1/Lee West - Wishing.mp3" },
+  { name: "Lindsay Lohan - Over.mp3", url: "Songs 1/Lindsay Lohan - Over.mp3" },
+  { name: "Livin Joy - Follow The Rules.mp3", url: "Songs 1/Livin Joy - Follow The Rules.mp3" },
+  { name: "Living Colour - Solace Of You.mp3", url: "Songs 1/Living Colour - Solace Of You.mp3" },
+  { name: "LMC Vs U2 - Take Me To The Clouds Above.mp3", url: "Songs 1/LMC Vs U2 - Take Me To The Clouds Above.mp3" },
+  { name: "Los Lobos - La Bamba.mp3", url: "Songs 1/Los Lobos - La Bamba.mp3" },
+  { name: "Love Affair - Bringing On Back The Good Times.mp3", url: "Songs 1/Love Affair - Bringing On Back The Good Times.mp3" },
+  { name: "Lumidee - Never Leave You.mp3", url: "Songs 1/Lumidee - Never Leave You.mp3" },
+  { name: "M.O - Preach.mp3", url: "Songs 1/M.O - Preach.mp3" },
+  { name: "Magic Box - If You.mp3", url: "Songs 1/Magic Box - If You.mp3" },
+  { name: "Mandy Moore - I Wanna Be With You.mp3", url: "Songs 1/Mandy Moore - I Wanna Be With You.mp3" },
+  { name: "Manfred Mann Earthband - Joybringer.mp3", url: "Songs 1/Manfred Mann Earthband - Joybringer.mp3" },
+  { name: "Manic Street Preachers - Your Love Alone Is Not Enough.mp3", url: "Songs 1/Manic Street Preachers - Your Love Alone Is Not Enough.mp3" },
+  { name: "Manuel Ortega - Upside Down.mp3", url: "Songs 1/Manuel Ortega - Upside Down.mp3" },
+  { name: "Marcella Woods - Beautiful.mp3", url: "Songs 1/Marcella Woods - Beautiful.mp3" },
+  { name: "Maroon 5 - Sugar.mp3", url: "Songs 1/Maroon 5 - Sugar.mp3" },
+  { name: "Maroon 5 - What Lovers Do.mp3", url: "Songs 1/Maroon 5 - What Lovers Do.mp3" },
+  { name: "Max Restaino - Girl Of My Dreams.mp3", url: "Songs 1/Max Restaino - Girl Of My Dreams.mp3" },
+  { name: "Mcfly - All About You.mp3", url: "Songs 1/Mcfly - All About You.mp3" },
+  { name: "Mcfly - Star Girl.mp3", url: "Songs 1/Mcfly - Star Girl.mp3" },
+  { name: "McFly Ft Taio Cruz - Shine A Light.mp3", url: "Songs 1/McFly Ft Taio Cruz - Shine A Light.mp3" },
+  { name: "Meck - Thunder In My Heart.mp3", url: "Songs 1/Meck - Thunder In My Heart.mp3" },
+  { name: "Melissa Manchester - You Should Hear How She Talks About You.mp3", url: "Songs 1/Melissa Manchester - You Should Hear How She Talks About You.mp3" },
+  { name: "Mental As Anything - Live It Up.mp3", url: "Songs 1/Mental As Anything - Live It Up.mp3" },
+  { name: "Mica Paris - Like Dreamers Do.mp3", url: "Songs 1/Mica Paris - Like Dreamers Do.mp3" },
+  { name: "Michele - Do Me Baby.mp3", url: "Songs 1/Michele - Do Me Baby.mp3" },
+  { name: "Michelle Gayle - Do You Know (Full Intention Vocal Mix).mp3", url: "Songs 1/Michelle Gayle - Do You Know (Full Intention Vocal Mix).mp3" },
+  { name: "MN8 - Ive Got A Little Something For You.mp3", url: "Songs 1/MN8 - Ive Got A Little Something For You.mp3" },
+  { name: "Modjo - Lady.mp3", url: "Songs 1/Modjo - Lady.mp3" },
+  { name: "Nelly Furtado Ft Timbaland - Promiscuous.mp3", url: "Songs 1/Nelly Furtado Ft Timbaland - Promiscuous.mp3" },
+  { name: "New Kids On The Block - Step By Step.mp3", url: "Songs 1/New Kids On The Block - Step By Step.mp3" },
+  { name: "Ne-Yo - Because Of You.mp3", url: "Songs 1/Ne-Yo - Because Of You.mp3" },
+  { name: "Ne-Yo - Miss Independent.mp3", url: "Songs 1/Ne-Yo - Miss Independent.mp3" },
+  { name: "Ne-Yo - Sexy Love.mp3", url: "Songs 1/Ne-Yo - Sexy Love.mp3" },
+  { name: "Ne-Yo ft New Kids On The Block - Single.mp3", url: "Songs 1/Ne-Yo ft New Kids On The Block - Single.mp3" },
+  { name: "Nick Carter - So Far Away.mp3", url: "Songs 1/Nick Carter - So Far Away.mp3" },
+  { name: "Nickelback - Far Away.mp3", url: "Songs 1/Nickelback - Far Away.mp3" },
+  { name: "Nicki Minaj - Super Bass.mp3", url: "Songs 1/Nicki Minaj - Super Bass.mp3" },
+  { name: "Nicki Minaj ft Rihanna - Fly.mp3", url: "Songs 1/Nicki Minaj ft Rihanna - Fly.mp3" },
+  { name: "Nightcrawlers - Lets Push It.mp3", url: "Songs 1/Nightcrawlers - Lets Push It.mp3" },
+  { name: "Northern Line - First Time.mp3", url: "Songs 1/Northern Line - First Time.mp3" },
+  { name: "Oasis - Lyla.mp3", url: "Songs 1/Oasis - Lyla.mp3" },
+  { name: "Olly Murs - Please Dont Let Me Go.mp3", url: "Songs 1/Olly Murs - Please Dont Let Me Go.mp3" },
+  { name: "One Direction - Change Your Ticket.mp3", url: "Songs 1/One Direction - Change Your Ticket.mp3" },
+  { name: "Owen Paul - My Favourite Waste Of Time.mp3", url: "Songs 1/Owen Paul - My Favourite Waste Of Time.mp3" },
+  { name: "O-Zone - Dragostea Din Tei.mp3", url: "Songs 1/O-Zone - Dragostea Din Tei.mp3" },
+  { name: "Peter Andre - Kiss The Girl.mp3", url: "Songs 1/Peter Andre - Kiss The Girl.mp3" },
+  { name: "Peter Andre - Only One.mp3", url: "Songs 1/Peter Andre - Only One.mp3" },
+  { name: "Peter Andre - Show U Somethin.mp3", url: "Songs 1/Peter Andre - Show U Somethin.mp3" },
+  { name: "Phd - I Wont Let You Down.mp3", url: "Songs 1/Phd - I Wont Let You Down.mp3" },
+  { name: "Phil Fearon - Aint Nothing But A House Party.mp3", url: "Songs 1/Phil Fearon - Aint Nothing But A House Party.mp3" },
+  { name: "Pink - Please Dont Leave Me.mp3", url: "Songs 1/Pink - Please Dont Leave Me.mp3" },
+  { name: "Rapination Kym Mazelle - Love Me The Right Way.mp3", url: "Songs 1/Rapination Kym Mazelle - Love Me The Right Way.mp3" },
+  { name: "Rebecca Ferguson - No Words Needed.mp3", url: "Songs 1/Rebecca Ferguson - No Words Needed.mp3" },
+  { name: "Reel - You Take Me Away.mp3", url: "Songs 1/Reel - You Take Me Away.mp3" },
+  { name: "Richard Ashcroft - Cmon People (Were Making It Now).mp3", url: "Songs 1/Richard Ashcroft - Cmon People (Were Making It Now).mp3" },
+  { name: "Rihanna - Hate That I Love You.mp3", url: "Songs 1/Rihanna - Hate That I Love You.mp3" },
+  { name: "Rihanna - Stay.mp3", url: "Songs 1/Rihanna - Stay.mp3" },
+  { name: "Rihanna - Whats My Name.mp3", url: "Songs 1/Rihanna - Whats My Name.mp3" },
+  { name: "Robyn - Youve Got That Somethin.mp3", url: "Songs 1/Robyn - Youve Got That Somethin.mp3" },
+  { name: "Ronan Keating - Lost For Words.mp3", url: "Songs 1/Ronan Keating - Lost For Words.mp3" },
+  { name: "Rozalla - Everybodys Free.mp3", url: "Songs 1/Rozalla - Everybodys Free.mp3" },
+  { name: "Rudimental Ft John Newman - Feel The Love.mp3", url: "Songs 1/Rudimental Ft John Newman - Feel The Love.mp3" },
+  { name: "Ryan Paris - Dolce Vita.mp3", url: "Songs 1/Ryan Paris - Dolce Vita.mp3" },
+  { name: "S Club Juniors - Automatic High.mp3", url: "Songs 1/S Club Juniors - Automatic High.mp3" },
+  { name: "Sabrina Johnston - Peace.mp3", url: "Songs 1/Sabrina Johnston - Peace.mp3" },
+  { name: "Samantha Mumba - Can It Be Love.mp3", url: "Songs 1/Samantha Mumba - Can It Be Love.mp3" },
+  { name: "Scandal-Us - Love You To (Be My Baby).mp3", url: "Songs 1/Scandal-Us - Love You To (Be My Baby).mp3" },
+  { name: "Scouting For Girls - This Aint A Love Song.mp3", url: "Songs 1/Scouting For Girls - This Aint A Love Song.mp3" },
+  { name: "September - Cant Get Over.mp3", url: "Songs 1/September - Cant Get Over.mp3" },
+  { name: "Shaggy - Dance and Shout.mp3", url: "Songs 1/Shaggy - Dance and Shout.mp3" },
+  { name: "Shalamar - I Can Make You Feel Good.mp3", url: "Songs 1/Shalamar - I Can Make You Feel Good.mp3" },
+  { name: "Shanice - Saving Forever For You.mp3", url: "Songs 1/Shanice - Saving Forever For You.mp3" },
+  { name: "Sharam - P.A.T.T. (Party All The Time).mp3", url: "Songs 1/Sharam - P.A.T.T. (Party All The Time).mp3" },
+  { name: "Simon Laufer - Cant Feel The Ground.mp3", url: "Songs 1/Simon Laufer - Cant Feel The Ground.mp3" },
+  { name: "Simon Webbe - Coming Around Again.mp3", url: "Songs 1/Simon Webbe - Coming Around Again.mp3" },
+  { name: "Simon Webbe - No Worries.mp3", url: "Songs 1/Simon Webbe - No Worries.mp3" },
+  { name: "Simple Minds - Alive And Kicking.mp3", url: "Songs 1/Simple Minds - Alive And Kicking.mp3" },
+  { name: "Simple Minds - Let There Be Love.mp3", url: "Songs 1/Simple Minds - Let There Be Love.mp3" },
+  { name: "Snap - Rhythm Is A Dancer.mp3", url: "Songs 1/Snap - Rhythm Is A Dancer.mp3" },
+  { name: "Soccer Anthem (Ole Ole Ole).mp3", url: "Songs 1/Soccer Anthem (Ole Ole Ole).mp3" },
+  { name: "Sonique - It Feels So Good.mp3", url: "Songs 1/Sonique - It Feels So Good.mp3" },
+  { name: "Soul II Soul - Love Enough.mp3", url: "Songs 1/Soul II Soul - Love Enough.mp3" },
+  { name: "Spirits Of Rhythm - Music.mp3", url: "Songs 1/Spirits Of Rhythm - Music.mp3" },
+  { name: "Stereophonics - Caught By The Wind.mp3", url: "Songs 1/Stereophonics - Caught By The Wind.mp3" },
+  { name: "Steve Balsamo - How Can I.mp3", url: "Songs 1/Steve Balsamo - How Can I.mp3" },
+  { name: "Sugababes - Freak Like Me.mp3", url: "Songs 1/Sugababes - Freak Like Me.mp3" },
+  { name: "Sugababes - Ugly.mp3", url: "Songs 1/Sugababes - Ugly.mp3" },
+  { name: "SWV - Anything.mp3", url: "Songs 1/SWV - Anything.mp3" },
+  { name: "SWV - Right Here.mp3", url: "Songs 1/SWV - Right Here.mp3" },
+  { name: "Taio Cruz - I Can Be.mp3", url: "Songs 1/Taio Cruz - I Can Be.mp3" },
+  { name: "Take That - Back For Good.mp3", url: "Songs 1/Take That - Back For Good.mp3" },
+  { name: "Take That - Do What You Like.mp3", url: "Songs 1/Take That - Do What You Like.mp3" },
+  { name: "Take That - Greatest Day.mp3", url: "Songs 1/Take That - Greatest Day.mp3" },
+  { name: "Take That - Rule The World.mp3", url: "Songs 1/Take That - Rule The World.mp3" },
+  { name: "Texas - Put Your Arms Around Me.mp3", url: "Songs 1/Texas - Put Your Arms Around Me.mp3" },
+  { name: "The Alan Parsons Project - Prime Time.mp3", url: "Songs 1/The Alan Parsons Project - Prime Time.mp3" },
+  { name: "The Gap Band - Big Fun.mp3", url: "Songs 1/The Gap Band - Big Fun.mp3" },
+  { name: "The Jacksons - Shake Your Body (Down To The Ground).mp3", url: "Songs 1/The Jacksons - Shake Your Body (Down To The Ground).mp3" },
+  { name: "The Party - Thats Why.mp3", url: "Songs 1/The Party - Thats Why.mp3" },
+  { name: "The Saturdays - Higher.mp3", url: "Songs 1/The Saturdays - Higher.mp3" },
+  { name: "The Saturdays - Issues.mp3", url: "Songs 1/The Saturdays - Issues.mp3" },
+  { name: "The Shapeshifters - Lolas Theme.mp3", url: "Songs 1/The Shapeshifters - Lolas Theme.mp3" },
+  { name: "The Spinners - Working My Way Back To You.mp3", url: "Songs 1/The Spinners - Working My Way Back To You.mp3" },
+  { name: "The System - Dont Disturb This Groove.mp3", url: "Songs 1/The System - Dont Disturb This Groove.mp3" },
+  { name: "The Tyrrel Corporation - Better Days.mp3", url: "Songs 1/The Tyrrel Corporation - Better Days.mp3" },
+  { name: "The Underdog Project - Summer Jam.mp3", url: "Songs 1/The Underdog Project - Summer Jam.mp3" },
+  { name: "The Wanted - Glow In The Dark.mp3", url: "Songs 1/The Wanted - Glow In The Dark.mp3" },
+  { name: "The Wanted - Gold Forever.mp3", url: "Songs 1/The Wanted - Gold Forever.mp3" },
+  { name: "The Wanted - Lose My Mind.mp3", url: "Songs 1/The Wanted - Lose My Mind.mp3" },
+  { name: "Thomas Helmig - Groovy Day.mp3", url: "Songs 1/Thomas Helmig - Groovy Day.mp3" },
+  { name: "Timbaland - The Way I Are.mp3", url: "Songs 1/Timbaland - The Way I Are.mp3" },
+  { name: "Tinchy Stryder - Number 1.mp3", url: "Songs 1/Tinchy Stryder - Number 1.mp3" },
+  { name: "Tinchy Stryder - Take Me Back.mp3", url: "Songs 1/Tinchy Stryder - Take Me Back.mp3" },
+  { name: "Tinchy Stryder Ft Amelle - Never Leave You.mp3", url: "Songs 1/Tinchy Stryder Ft Amelle - Never Leave You.mp3" },
+  { name: "TLC - Dear Lie.mp3", url: "Songs 1/TLC - Dear Lie.mp3" },
+  { name: "TLC - Way Back.mp3", url: "Songs 1/TLC - Way Back.mp3" },
+  { name: "Toni Braxton - I Belong To You.mp3", url: "Songs 1/Toni Braxton - I Belong To You.mp3" },
+  { name: "Toni Braxton - Spanish Guitar.mp3", url: "Songs 1/Toni Braxton - Spanish Guitar.mp3" },
+  { name: "Touche - Heaven Tonight.mp3", url: "Songs 1/Touche - Heaven Tonight.mp3" },
+  { name: "Touche - I Cant Get No Sleep.mp3", url: "Songs 1/Touche - I Cant Get No Sleep.mp3" },
+  { name: "Touche - Love Is The Answer.mp3", url: "Songs 1/Touche - Love Is The Answer.mp3" },
+  { name: "Tracie Spencer - This House.mp3", url: "Songs 1/Tracie Spencer - This House.mp3" },
+  { name: "Triple Eight - Give Me A Reason.mp3", url: "Songs 1/Triple Eight - Give Me A Reason.mp3" },
+  { name: "True Faith - Take Me Away.mp3", url: "Songs 1/True Faith - Take Me Away.mp3" },
+  { name: "U2 - Beautiful Day.mp3", url: "Songs 1/U2 - Beautiful Day.mp3" },
+  { name: "U2 - Sometimes You Cant Make It On Your Own.mp3", url: "Songs 1/U2 - Sometimes You Cant Make It On Your Own.mp3" },
+  { name: "Ultra High - Stay With Me.mp3", url: "Songs 1/Ultra High - Stay With Me.mp3" },
+  { name: "Ultrabeat - Pretty Green Eyes.mp3", url: "Songs 1/Ultrabeat - Pretty Green Eyes.mp3" },
+  { name: "Uniting Nations - Out Of Touch.mp3", url: "Songs 1/Uniting Nations - Out Of Touch.mp3" },
+  { name: "Unnamed 2.mp3", url: "Songs 1/Unnamed 2.mp3" },
+  { name: "Unnamed 3.mp3", url: "Songs 1/Unnamed 3.mp3" },
+  { name: "Unnamed 5.mp3", url: "Songs 1/Unnamed 5.mp3" },
+  { name: "Unnamed 8.mp3", url: "Songs 1/Unnamed 8.mp3" },
+  { name: "Urban Cookie Collective - The Key The Secret.mp3", url: "Songs 1/Urban Cookie Collective - The Key The Secret.mp3" },
+  { name: "Usher - Love In This Club.mp3", url: "Songs 1/Usher - Love In This Club.mp3" },
+  { name: "Usher - OMG.mp3", url: "Songs 1/Usher - OMG.mp3" },
+  { name: "Usher - Too Much.mp3", url: "Songs 1/Usher - Too Much.mp3" },
+  { name: "V - You Stood Up.mp3", url: "Songs 1/V - You Stood Up.mp3" },
+  { name: "Victoria Beckham - Let Your Head Go.mp3", url: "Songs 1/Victoria Beckham - Let Your Head Go.mp3" },
+  { name: "Westlife - Against All Odds.mp3", url: "Songs 1/Westlife - Against All Odds.mp3" },
+  { name: "Westlife - Amazing.mp3", url: "Songs 1/Westlife - Amazing.mp3" },
+  { name: "Westlife - Dont Let Me Go.mp3", url: "Songs 1/Westlife - Dont Let Me Go.mp3" },
+  { name: "Westlife - The Difference.mp3", url: "Songs 1/Westlife - The Difference.mp3" },
+  { name: "Westlife - Us Against The World.mp3", url: "Songs 1/Westlife - Us Against The World.mp3" },
+  { name: "Westlife - What About Now.mp3", url: "Songs 1/Westlife - What About Now.mp3" },
+  { name: "Wet Wet Wet - Cold Cold Heart.mp3", url: "Songs 1/Wet Wet Wet - Cold Cold Heart.mp3" },
+  { name: "Wham - Im Your Man (remix).mp3", url: "Songs 1/Wham - Im Your Man (remix).mp3" },
+  { name: "When In Rome - The Promise.mp3", url: "Songs 1/When In Rome - The Promise.mp3" },
+  { name: "Whigfield - Gimme Gimme.mp3", url: "Songs 1/Whigfield - Gimme Gimme.mp3" },
+  { name: "Will To Power - Dreamin.mp3", url: "Songs 1/Will To Power - Dreamin.mp3" },
+  { name: "Will Young - Lie Next To Me.mp3", url: "Songs 1/Will Young - Lie Next To Me.mp3" },
+  { name: "Years and Years - Eyes Shut.mp3", url: "Songs 1/Years and Years - Eyes Shut.mp3" }
+
+];
+
+
+
+
+
+    const playlist2 = [
+ { name: "DJ Sammy - Sunlight.mp3", url: "Songs 2/DJ Sammy - Sunlight.mp3" },
+  { name: "88rising - These Nights.mp3", url: "Songs 2/88rising - These Nights.mp3" },
+  { name: "98° - Give Me Just One Night.mp3", url: "Songs 2/98° - Give Me Just One Night.mp3" },
+  { name: "A1 - Dont Wanna Lose You Again.mp3", url: "Songs 2/A1 - Dont Wanna Lose You Again.mp3" },
+  { name: "AB Logic - The Hitman.mp3", url: "Songs 2/AB Logic - The Hitman.mp3" },
+  { name: "Adam Rickit - Give Me Your Heart.mp3", url: "Songs 2/Adam Rickit - Give Me Your Heart.mp3" },
+  { name: "Adele - Oh My God.mp3", url: "Songs 2/Adele - Oh My God.mp3" },
+  { name: "aespa - Better Things.mp3", url: "Songs 2/aespa - Better Things.mp3" },
+  { name: "Agnes - Emotional.mp3", url: "Songs 2/Agnes - Emotional.mp3" },
+  { name: "Al Green and Annie Lennox - Put A Little Love In Your Heart.mp3", url: "Songs 2/Al Green and Annie Lennox - Put A Little Love In Your Heart.mp3" },
+  { name: "Alex Party - Wrap Me Up.mp3", url: "Songs 2/Alex Party - Wrap Me Up.mp3" },
+  { name: "Alexander Klaws - I Dont Wanna Say That.mp3", url: "Songs 2/Alexander Klaws - I Dont Wanna Say That.mp3" },
+  { name: "Alexander Klaws - Stay With Me.mp3", url: "Songs 2/Alexander Klaws - Stay With Me.mp3" },
+  { name: "Alexandra Burke - Let It Go.mp3", url: "Songs 2/Alexandra Burke - Let It Go.mp3" },
+  { name: "Alexia - Uh La La La.mp3", url: "Songs 2/Alexia - Uh La La La.mp3" },
+  { name: "Ali Campbell - Let Your Yeah Be Yeah.mp3", url: "Songs 2/Ali Campbell - Let Your Yeah Be Yeah.mp3" },
+  { name: "Alicia Keys - Teenage Love Affair.mp3", url: "Songs 2/Alicia Keys - Teenage Love Affair.mp3" },
+  { name: "Alishas Attic - Air We Breathe.mp3", url: "Songs 2/Alishas Attic - Air We Breathe.mp3" },
+  { name: "Alison Limerick - Time Of Our Lives.mp3", url: "Songs 2/Alison Limerick - Time Of Our Lives.mp3" },
+  { name: "Anastacia - Take This Chance.mp3", url: "Songs 2/Anastacia - Take This Chance.mp3" },
+  { name: "Andy Murphy - Cant Keep Me.mp3", url: "Songs 2/Andy Murphy - Cant Keep Me.mp3" },
+  { name: "Andy Shauf - Jenny Come Home.mp3", url: "Songs 2/Andy Shauf - Jenny Come Home.mp3" },
+  { name: "Armand Van Helden - I Want Your Soul.mp3", url: "Songs 2/Armand Van Helden - I Want Your Soul.mp3" },
+  { name: "Ashford and Simpson - Solid.mp3", url: "Songs 2/Ashford and Simpson - Solid.mp3" },
+  { name: "Atomic Kitten - Follow Me.mp3", url: "Songs 2/Atomic Kitten - Follow Me.mp3" },
+  { name: "Atomic Kitten - The Tide Is High (Get The Feeling) (Groove Brother Edit).mp3", url: "Songs 2/Atomic Kitten - The Tide Is High (Get The Feeling) (Groove Brother Edit).mp3" },
+  { name: "Axwell - Something New.mp3", url: "Songs 2/Axwell - Something New.mp3" },
+  { name: "B3 - Nightfever.mp3", url: "Songs 2/B3 - Nightfever.mp3" },
+  { name: "B3 - You Win Again.mp3", url: "Songs 2/B3 - You Win Again.mp3" },
+  { name: "Backstreet Boys - Get Down.mp3", url: "Songs 2/Backstreet Boys - Get Down.mp3" },
+  { name: "Backstreet Boys - Nobody Else.mp3", url: "Songs 2/Backstreet Boys - Nobody Else.mp3" },
+  { name: "Bad Boys Inc - More To This World.mp3", url: "Songs 2/Bad Boys Inc - More To This World.mp3" },
+  { name: "Bad Boys Inc - Whenever You Need Someone.mp3", url: "Songs 2/Bad Boys Inc - Whenever You Need Someone.mp3" },
+  { name: "Bass-O-Matic - Fascinating Rhythm.mp3", url: "Songs 2/Bass-O-Matic - Fascinating Rhythm.mp3" },
+  { name: "Belouis Some - Some People.mp3", url: "Songs 2/Belouis Some - Some People.mp3" },
+  { name: "Ben Davidson - Anything.mp3", url: "Songs 2/Ben Davidson - Anything.mp3" },
+  { name: "Beyonce - Irreplaceable.mp3", url: "Songs 2/Beyonce - Irreplaceable.mp3" },
+  { name: "Big Fun - Cant Shake The Feeling.mp3", url: "Songs 2/Big Fun - Cant Shake The Feeling.mp3" },
+  { name: "Big Mountain - Baby I Love Your Way.mp3", url: "Songs 2/Big Mountain - Baby I Love Your Way.mp3" },
+  { name: "Big Mountain - Sweet Sensual Love.mp3", url: "Songs 2/Big Mountain - Sweet Sensual Love.mp3" },
+  { name: "Big Time Rush - Love Me Again.mp3", url: "Songs 2/Big Time Rush - Love Me Again.mp3" },
+  { name: "Black Box - I Dont Know Anybody Else.mp3", url: "Songs 2/Black Box - I Dont Know Anybody Else.mp3" },
+  { name: "Black Eyed Peas - Dont Phunk With My Heart.mp3", url: "Songs 2/Black Eyed Peas - Dont Phunk With My Heart.mp3" },
+  { name: "Blake McGrath - Get Enough.mp3", url: "Songs 2/Blake McGrath - Get Enough.mp3" },
+  { name: "Blue - Walk Away.mp3", url: "Songs 2/Blue - Walk Away.mp3" },
+  { name: "Boogie Box High - Jive Talkin.mp3", url: "Songs 2/Boogie Box High - Jive Talkin.mp3" },
+  { name: "BoyzNGirlz - Light Of Love.mp3", url: "Songs 2/BoyzNGirlz - Light Of Love.mp3" },
+  { name: "Boyzone - Too Late For Hallelujah.mp3", url: "Songs 2/Boyzone - Too Late For Hallelujah.mp3" },
+  { name: "Brendan Maclean - Easy Love.mp3", url: "Songs 2/Brendan Maclean - Easy Love.mp3" },
+  { name: "Britney Spears - Let Me Be.mp3", url: "Songs 2/Britney Spears - Let Me Be.mp3" },
+  { name: "Britney Spears - Up N Down.mp3", url: "Songs 2/Britney Spears - Up N Down.mp3" },
+  { name: "Brother Beyond - Can You Keep A Secret.mp3", url: "Songs 2/Brother Beyond - Can You Keep A Secret.mp3" },
+  { name: "Busted and Hanson - MMMBop.mp3", url: "Songs 2/Busted and Hanson - MMMBop.mp3" },
+  { name: "Candi - Dancing Under A Latin Moon.mp3", url: "Songs 2/Candi - Dancing Under A Latin Moon.mp3" },
+  { name: "Caught In the Act - Love Is Everywhere.mp3", url: "Songs 2/Caught In the Act - Love Is Everywhere.mp3" },
+  { name: "Caught In The Act - Never Gonna Change.mp3", url: "Songs 2/Caught In The Act - Never Gonna Change.mp3" },
+  { name: "Ce Ce Peniston - We Got A Love Thang.mp3", url: "Songs 2/Ce Ce Peniston - We Got A Love Thang.mp3" },
+  { name: "CeeLo Green - Bright Lights Bigger City.mp3", url: "Songs 2/CeeLo Green - Bright Lights Bigger City.mp3" },
+  { name: "CeeLo Green - Forget You.mp3", url: "Songs 2/CeeLo Green - Forget You.mp3" },
+  { name: "CeeLo Green - Music To My Soul.mp3", url: "Songs 2/CeeLo Green - Music To My Soul.mp3" },
+  { name: "Celetia - Rewind.mp3", url: "Songs 2/Celetia - Rewind.mp3" },
+  { name: "Celine Dion - I Drove All Night.mp3", url: "Songs 2/Celine Dion - I Drove All Night.mp3" },
+  { name: "Celine Dion - Treat Her Like A Lady (The Metro Club Mix).mp3", url: "Songs 2/Celine Dion - Treat Her Like A Lady (The Metro Club Mix).mp3" },
+  { name: "Chaka Khan - Love of a lifetime.mp3", url: "Songs 2/Chaka Khan - Love of a lifetime.mp3" },
+  { name: "Chappell Roan - The Subway.mp3", url: "Songs 2/Chappell Roan - The Subway.mp3" },
+  { name: "Charli xcx - 3AM (Pull Up).mp3", url: "Songs 2/Charli xcx - 3AM (Pull Up).mp3" },
+  { name: "Charlie Brown - On My Way.mp3", url: "Songs 2/Charlie Brown - On My Way.mp3" },
+  { name: "Chart Collective - Homely Girl.mp3", url: "Songs 2/Chart Collective - Homely Girl.mp3" },
+  { name: "Chill Factor - Twist (Round & Round).mp3", url: "Songs 2/Chill Factor - Twist (Round & Round).mp3" },
+  { name: "Chris Brown - Forever.mp3", url: "Songs 2/Chris Brown - Forever.mp3" },
+  { name: "Christina Aguilera - Dont Make Me Love You.mp3", url: "Songs 2/Christina Aguilera - Dont Make Me Love You.mp3" },
+  { name: "Christina Aguilera - What A Girl Wants.mp3", url: "Songs 2/Christina Aguilera - What A Girl Wants.mp3" },
+  { name: "Christopher Wilde - Something About The Sunshine.mp3", url: "Songs 2/Christopher Wilde - Something About The Sunshine.mp3" },
+  { name: "Clay Aiken - When You Say You Love Me.mp3", url: "Songs 2/Clay Aiken - When You Say You Love Me.mp3" },
+  { name: "Climie Fisher - I Wont Bleed For You.mp3", url: "Songs 2/Climie Fisher - I Wont Bleed For You.mp3" },
+  { name: "Climie Fisher - Love Like A River Dance Mix.mp3", url: "Songs 2/Climie Fisher - Love Like A River Dance Mix.mp3" },
+  { name: "Clive - Ill Be Waiting.mp3", url: "Songs 2/Clive - Ill Be Waiting.mp3" },
+  { name: "Club House - Deep In My Heart.mp3", url: "Songs 2/Club House - Deep In My Heart.mp3" },
+  { name: "Clubland - Hold On (Tighter To Love).mp3", url: "Songs 2/Clubland - Hold On (Tighter To Love).mp3" },
+  { name: "Coldplay - Fix You.mp3", url: "Songs 2/Coldplay - Fix You.mp3" },
+  { name: "Cooly Live - Shake Her.mp3", url: "Songs 2/Cooly Live - Shake Her.mp3" },
+  { name: "Corrs - Irresistible.mp3", url: "Songs 2/Corrs - Irresistible.mp3" },
+  { name: "Culture Beat - No Deeper Meaning.mp3", url: "Songs 2/Culture Beat - No Deeper Meaning.mp3" },
+  { name: "Cyndi Lauper - Girls Just Wanna Have Fun.mp3", url: "Songs 2/Cyndi Lauper - Girls Just Wanna Have Fun.mp3" },
+  { name: "Daley - Broken.mp3", url: "Songs 2/Daley - Broken.mp3" },
+  { name: "Damage - Love Guaranteed.mp3", url: "Songs 2/Damage - Love Guaranteed.mp3" },
+  { name: "Dan Talevski - Knock Me Off My Feet.mp3", url: "Songs 2/Dan Talevski - Knock Me Off My Feet.mp3" },
+  { name: "Dana Dawson - Show Me.mp3", url: "Songs 2/Dana Dawson - Show Me.mp3" },
+  { name: "Daniel Kublbock - You Drive Me Crazy.mp3", url: "Songs 2/Daniel Kublbock - You Drive Me Crazy.mp3" },
+  { name: "Darin - Everything But The Girl.mp3", url: "Songs 2/Darin - Everything But The Girl.mp3" },
+  { name: "Darlene Davis - I Found Love.mp3", url: "Songs 2/Darlene Davis - I Found Love.mp3" },
+  { name: "Dave Edmunds - Girls Talk.mp3", url: "Songs 2/Dave Edmunds - Girls Talk.mp3" },
+  { name: "David Gray - Please Forgive Me.mp3", url: "Songs 2/David Gray - Please Forgive Me.mp3" },
+  { name: "DeBarge - Dance All Night.mp3", url: "Songs 2/DeBarge - Dance All Night.mp3" },
+  { name: "Deepest Blue - Shooting Star.mp3", url: "Songs 2/Deepest Blue - Shooting Star.mp3" },
+  { name: "Dennis Edwards - Dont Look Any Further.mp3", url: "Songs 2/Dennis Edwards - Dont Look Any Further.mp3" },
+  { name: "Desiya - Comin On Strong.mp3", url: "Songs 2/Desiya - Comin On Strong.mp3" },
+  { name: "D-Faction - Pride.mp3", url: "Songs 2/D-Faction - Pride.mp3" },
+  { name: "Disclosure and Sam Smith - Latch.mp3", url: "Songs 2/Disclosure and Sam Smith - Latch.mp3" },
+  { name: "DJ Otzi - Hey Baby.mp3", url: "Songs 2/DJ Otzi - Hey Baby.mp3" },
+  { name: "Kylie Minogue - Breathe.mp3", url: "Songs 2/Kylie Minogue - Breathe.mp3" },
+  { name: "Don-E - Love Makes The World Go Round.mp3", url: "Songs 2/Don-E - Love Makes The World Go Round.mp3" },
+  { name: "Double Nation - Move Your Love.mp3", url: "Songs 2/Double Nation - Move Your Love.mp3" },
+  { name: "Drake - Find Your Love.mp3", url: "Songs 2/Drake - Find Your Love.mp3" },
+  { name: "Drake - One Dance.mp3", url: "Songs 2/Drake - One Dance.mp3" },
+  { name: "Dream - This Is Me.mp3", url: "Songs 2/Dream - This Is Me.mp3" },
+  { name: "Dzeko and Keith Urban - Both Still Young.mp3", url: "Songs 2/Dzeko and Keith Urban - Both Still Young.mp3" },
+  { name: "Eagle Eye Cherry - Are You Still Having Fun.mp3", url: "Songs 2/Eagle Eye Cherry - Are You Still Having Fun.mp3" },
+  { name: "East Side Beat - You Are My Everything.mp3", url: "Songs 2/East Side Beat - You Are My Everything.mp3" },
+  { name: "Echo & The Bunnymen - Rust.mp3", url: "Songs 2/Echo & The Bunnymen - Rust.mp3" },
+  { name: "Eclipse - Makes Me Love You.mp3", url: "Songs 2/Eclipse - Makes Me Love You.mp3" },
+  { name: "Eddy Grant - Electric Avenue.mp3", url: "Songs 2/Eddy Grant - Electric Avenue.mp3" },
+  { name: "Edward Maya - Stereo Love.mp3", url: "Songs 2/Edward Maya - Stereo Love.mp3" },
+  { name: "Eliza Doolittle - Pack Up.mp3", url: "Songs 2/Eliza Doolittle - Pack Up.mp3" },
+  { name: "eliZe - Pass The Dutchie.mp3", url: "Songs 2/eliZe - Pass The Dutchie.mp3" },
+  { name: "Ella Henderson - Dream On Me.mp3", url: "Songs 2/Ella Henderson - Dream On Me.mp3" },
+  { name: "Ellery Cohen - Waiting.mp3", url: "Songs 2/Ellery Cohen - Waiting.mp3" },
+  { name: "Ellie Goulding - Lost And Found.mp3", url: "Songs 2/Ellie Goulding - Lost And Found.mp3" },
+  { name: "Elvis Costello and The Attractions - Olivers Army.mp3", url: "Songs 2/Elvis Costello and The Attractions - Olivers Army.mp3" },
+  { name: "Elvis Presley - A Little Less Conversation.mp3", url: "Songs 2/Elvis Presley - A Little Less Conversation.mp3" },
+  { name: "Emeli Sande - Heaven.mp3", url: "Songs 2/Emeli Sande - Heaven.mp3" },
+  { name: "Engelbert Humperdinck - Quando Quando.mp3", url: "Songs 2/Engelbert Humperdinck - Quando Quando.mp3" },
+  { name: "Enrique Iglesias - Escape.mp3", url: "Songs 2/Enrique Iglesias - Escape.mp3" },
+  { name: "Erasure - Hey Now (Think I Got a Feeling).mp3", url: "Songs 2/Erasure - Hey Now (Think I Got a Feeling).mp3" },
+  { name: "Erasure - Make Me Smile (Come Up And See Me).mp3", url: "Songs 2/Erasure - Make Me Smile (Come Up And See Me).mp3" },
+  { name: "Eric Prydz - Every Day.mp3", url: "Songs 2/Eric Prydz - Every Day.mp3" },
+  { name: "Espen Lind - Lucky For You.mp3", url: "Songs 2/Espen Lind - Lucky For You.mp3" },
+  { name: "Eternal - Crazy.mp3", url: "Songs 2/Eternal - Crazy.mp3" },
+  { name: "Fashion - Love Shadow.mp3", url: "Songs 2/Fashion - Love Shadow.mp3" },
+  { name: "Feeder - Turn.mp3", url: "Songs 2/Feeder - Turn.mp3" },
+  { name: "Five - Closer To Me.mp3", url: "Songs 2/Five - Closer To Me.mp3" },
+  { name: "Five - Feel The Love.mp3", url: "Songs 2/Five - Feel The Love.mp3" },
+  { name: "Five Star - Going With The Moment.mp3", url: "Songs 2/Five Star - Going With The Moment.mp3" },
+  { name: "Fleetwood Mac - Sara.mp3", url: "Songs 2/Fleetwood Mac - Sara.mp3" },
+  { name: "Fleur East - More And More.mp3", url: "Songs 2/Fleur East - More And More.mp3" },
+  { name: "Fragma - Tocas Miracle.mp3", url: "Songs 2/Fragma - Tocas Miracle.mp3" },
+  { name: "Frances Nero - Footsteps Following Me.mp3", url: "Songs 2/Frances Nero - Footsteps Following Me.mp3" },
+  { name: "Frankie Jordan - Once Again.mp3", url: "Songs 2/Frankie Jordan - Once Again.mp3" },
+  { name: "Friday Night Posse - Dreams.mp3", url: "Songs 2/Friday Night Posse - Dreams.mp3" },
+  { name: "Frou Frou - Breathe In.mp3", url: "Songs 2/Frou Frou - Breathe In.mp3" },
+  { name: "Fuse ODG - Top Of My Charts.mp3", url: "Songs 2/Fuse ODG - Top Of My Charts.mp3" },
+  { name: "Gabrielle - Find Your Way.mp3", url: "Songs 2/Gabrielle - Find Your Way.mp3" },
+  { name: "Gareth Gates - Unchained Melody.mp3", url: "Songs 2/Gareth Gates - Unchained Melody.mp3" },
+  { name: "Gary Barker - Dreams Come True.mp3", url: "Songs 2/Gary Barker - Dreams Come True.mp3" },
+  { name: "Gary Barlow - Followed You Home.mp3", url: "Songs 2/Gary Barlow - Followed You Home.mp3" },
+  { name: "Gary Barlow and Elton John - Face To Face.mp3", url: "Songs 2/Gary Barlow and Elton John - Face To Face.mp3" },
+  { name: "Gary Kemp - Ahead Of The Game.mp3", url: "Songs 2/Gary Kemp - Ahead Of The Game.mp3" },
+  { name: "Gary Numan - Friends Electric.mp3", url: "Songs 2/Gary Numan - Friends Electric.mp3" },
+  { name: "Gavin DeGraw - Not Over You.mp3", url: "Songs 2/Gavin DeGraw - Not Over You.mp3" },
+  { name: "George Michael - Fastlove.mp3", url: "Songs 2/George Michael - Fastlove.mp3" },
+  { name: "Girl Town - I Cant Help Myself.mp3", url: "Songs 2/Girl Town - I Cant Help Myself.mp3" },
+  { name: "Glee Cast - If I Cant Have You.mp3", url: "Songs 2/Glee Cast - If I Cant Have You.mp3" },
+  { name: "Hannahs Yard - With You All The Way.mp3", url: "Songs 2/Hannahs Yard - With You All The Way.mp3" },
+  { name: "HearSay - Lovin Is Easy.mp3", url: "Songs 2/HearSay - Lovin Is Easy.mp3" },
+  { name: "Henry Lee Summer - Hey Baby.mp3", url: "Songs 2/Henry Lee Summer - Hey Baby.mp3" },
+  { name: "Howard Jones - New Song.mp3", url: "Songs 2/Howard Jones - New Song.mp3" },
+  { name: "I Dream - Beautiful Thing.mp3", url: "Songs 2/I Dream - Beautiful Thing.mp3" },
+  { name: "I To I - The Right Time.mp3", url: "Songs 2/I To I - The Right Time.mp3" },
+  { name: "Inessa - You Bring Out The Best In Me.mp3", url: "Songs 2/Inessa - You Bring Out The Best In Me.mp3" },
+  { name: "Infiniti - Will You Be My Baby.mp3", url: "Songs 2/Infiniti - Will You Be My Baby.mp3" },
+  { name: "Inner City - Big Fun.mp3", url: "Songs 2/Inner City - Big Fun.mp3" },
+  { name: "Inner City - Good Life.mp3", url: "Songs 2/Inner City - Good Life.mp3" },
+  { name: "Jamie Cullum - Mind Trick.mp3", url: "Songs 2/Jamie Cullum - Mind Trick.mp3" },
+  { name: "Janet Jackson - Runaway.mp3", url: "Songs 2/Janet Jackson - Runaway.mp3" },
+  { name: "Jason Mraz and Colbie Caillat - Lucky.mp3", url: "Songs 2/Jason Mraz and Colbie Caillat - Lucky.mp3" },
+  { name: "Jennifer Lopez - Baby I Love U.mp3", url: "Songs 2/Jennifer Lopez - Baby I Love U.mp3" },
+  { name: "Jermaine Jackson - Sweetest Sweetest.mp3", url: "Songs 2/Jermaine Jackson - Sweetest Sweetest.mp3" },
+  { name: "Jess Glynne - All I Am.mp3", url: "Songs 2/Jess Glynne - All I Am.mp3" },
+  { name: "Jessica Mauboy - What Happened To Us.mp3", url: "Songs 2/Jessica Mauboy - What Happened To Us.mp3" },
+  { name: "Jessie Ware - Save A Kiss.mp3", url: "Songs 2/Jessie Ware - Save A Kiss.mp3" },
+  { name: "Jody Watley - Dont You Want Me.mp3", url: "Songs 2/Jody Watley - Dont You Want Me.mp3" },
+  { name: "Jody Watley - Some Kind Of Lover.mp3", url: "Songs 2/Jody Watley - Some Kind Of Lover.mp3" },
+  { name: "Joe and Jake - Youre Not Alone.mp3", url: "Songs 2/Joe and Jake - Youre Not Alone.mp3" },
+  { name: "Joey Lawrence - I Like The Way.mp3", url: "Songs 2/Joey Lawrence - I Like The Way.mp3" },
+  { name: "John Mayer - Last Train Home.mp3", url: "Songs 2/John Mayer - Last Train Home.mp3" },
+  { name: "Johnny Logan - Surprised.mp3", url: "Songs 2/Johnny Logan - Surprised.mp3" },
+  { name: "Jordin Sparks - Turn This Car Around.mp3", url: "Songs 2/Jordin Sparks - Turn This Car Around.mp3" },
+  { name: "Jump5 - Spinning Around.mp3", url: "Songs 2/Jump5 - Spinning Around.mp3" },
+  { name: "Justin Bieber - Love Song.mp3", url: "Songs 2/Justin Bieber - Love Song.mp3" },
+  { name: "Justin Bieber - Somebody To Love.mp3", url: "Songs 2/Justin Bieber - Somebody To Love.mp3" },
+  { name: "Justin Timberlake - Lovestoned.mp3", url: "Songs 2/Justin Timberlake - Lovestoned.mp3" },
+  { name: "Justin Timberlake - Suit & Tie.mp3", url: "Songs 2/Justin Timberlake - Suit & Tie.mp3" },
+  { name: "Kaci Battaglia - I Will Learn To Love Again.mp3", url: "Songs 2/Kaci Battaglia - I Will Learn To Love Again.mp3" },
+  { name: "Kane - So Glad You Made It.mp3", url: "Songs 2/Kane - So Glad You Made It.mp3" },
+  { name: "Kaoma - Lambada.mp3", url: "Songs 2/Kaoma - Lambada.mp3" },
+  { name: "Karen Ramirez - Looking For Love.mp3", url: "Songs 2/Karen Ramirez - Looking For Love.mp3" },
+  { name: "Karyn White - Slow Down.mp3", url: "Songs 2/Karyn White - Slow Down.mp3" },
+  { name: "Kate Ryan - La Promesse.mp3", url: "Songs 2/Kate Ryan - La Promesse.mp3" },
+  { name: "Katy B - What Love is Made Of.mp3", url: "Songs 2/Katy B - What Love is Made Of.mp3" },
+  { name: "Katy Perry - Con Calma.mp3", url: "Songs 2/Katy Perry - Con Calma.mp3" },
+  { name: "Katy Perry - Teenage Dream.mp3", url: "Songs 2/Katy Perry - Teenage Dream.mp3" },
+  { name: "Kavana - Funky Love.mp3", url: "Songs 2/Kavana - Funky Love.mp3" },
+  { name: "Keith Urban - Nightfalls.mp3", url: "Songs 2/Keith Urban - Nightfalls.mp3" },
+  { name: "Kelly Clarkson - Invincible (7th Heaven Radio Mix).mp3", url: "Songs 2/Kelly Clarkson - Invincible (7th Heaven Radio Mix).mp3" },
+  { name: "Keri Hilson - I Like.mp3", url: "Songs 2/Keri Hilson - I Like.mp3" },
+  { name: "Kleeer - Take Your Heart Away.mp3", url: "Songs 2/Kleeer - Take Your Heart Away.mp3" },
+  { name: "KMC ft Dhany - I Feel So Fine.mp3", url: "Songs 2/KMC ft Dhany - I Feel So Fine.mp3" },
+  { name: "KT Tunstall - Other Side Of The World.mp3", url: "Songs 2/KT Tunstall - Other Side Of The World.mp3" },
+  { name: "KWS - Please Dont Go.mp3", url: "Songs 2/KWS - Please Dont Go.mp3" },
+  { name: "Kylie Minogue - Better The Devil You Know.mp3", url: "Songs 2/Kylie Minogue - Better The Devil You Know.mp3" },
+  { name: "Robyn and Neneh Cherry - Buffalo Stance.mp3", url: "Songs 2/Robyn and Neneh Cherry - Buffalo Stance.mp3" },
+  { name: "Kylie Minogue - Got To Be Certain.mp3", url: "Songs 2/Kylie Minogue - Got To Be Certain.mp3" },
+  { name: "Kylie Minogue - Love At First Sight.mp3", url: "Songs 2/Kylie Minogue - Love At First Sight.mp3" },
+  { name: "Kylie Minogue - Slow.mp3", url: "Songs 2/Kylie Minogue - Slow.mp3" },
+  { name: "Kylie Minogue - What Do I Have To Do.mp3", url: "Songs 2/Kylie Minogue - What Do I Have To Do.mp3" },
+  { name: "Lady Gaga - Eh Eh Nothing Else I Can Say.mp3", url: "Songs 2/Lady Gaga - Eh Eh Nothing Else I Can Say.mp3" },
+  { name: "Lady Gaga ft Bradley Cooper - Shallow.mp3", url: "Songs 2/Lady Gaga ft Bradley Cooper - Shallow.mp3" },
+  { name: "Lawson - Taking Over Me.mp3", url: "Songs 2/Lawson - Taking Over Me.mp3" },
+  { name: "Lee Ryan - Real Love.mp3", url: "Songs 2/Lee Ryan - Real Love.mp3" },
+  { name: "Lemar - Dance With U.mp3", url: "Songs 2/Lemar - Dance With U.mp3" },
+  { name: "Lemar - Invincible.mp3", url: "Songs 2/Lemar - Invincible.mp3" },
+  { name: "Leona Lewis - Better In Time.mp3", url: "Songs 2/Leona Lewis - Better In Time.mp3" },
+  { name: "LF System - Afraid To Feel.mp3", url: "Songs 2/LF System - Afraid To Feel.mp3" },
+  { name: "Liam Gallagher - Now That I Found You.mp3", url: "Songs 2/Liam Gallagher - Now That I Found You.mp3" },
+  { name: "Lights - Ice.mp3", url: "Songs 2/Lights - Ice.mp3" },
+  { name: "Lil Uzi Vert - What You Saying.mp3", url: "Songs 2/Lil Uzi Vert - What You Saying.mp3" },
+  { name: "Lindy Layton - We Got The Love.mp3", url: "Songs 2/Lindy Layton - We Got The Love.mp3" },
+  { name: "Lionel Richie - Angel.mp3", url: "Songs 2/Lionel Richie - Angel.mp3" },
+  { name: "Lisa Keith - Better Than You.mp3", url: "Songs 2/Lisa Keith - Better Than You.mp3" },
+  { name: "Lisa Moorish - Love For Life.mp3", url: "Songs 2/Lisa Moorish - Love For Life.mp3" },
+  { name: "Lisa Stansfield - Lets Just Call It Love (Feel It Mix).mp3", url: "Songs 2/Lisa Stansfield - Lets Just Call It Love (Feel It Mix).mp3" },
+  { name: "Little Mix - No Time For Tears.mp3", url: "Songs 2/Little Mix - No Time For Tears.mp3" },
+  { name: "Loving Caliber - Insane.mp3", url: "Songs 2/Loving Caliber - Insane.mp3" },
+  { name: "M People - So Excited.mp3", url: "Songs 2/M People - So Excited.mp3" },
+  { name: "Madonna - Wheres The Party.mp3", url: "Songs 2/Madonna - Wheres The Party.mp3" },
+  { name: "Magic - Let Your Hair Down.mp3", url: "Songs 2/Magic - Let Your Hair Down.mp3" },
+  { name: "Magnus Backlund - The Name Of Love.mp3", url: "Songs 2/Magnus Backlund - The Name Of Love.mp3" },
+  { name: "Mah Na Mah Na.mp3", url: "Songs 2/Mah Na Mah Na.mp3" },
+  { name: "Manic Street Preachers - A Design For Life.mp3", url: "Songs 2/Manic Street Preachers - A Design For Life.mp3" },
+  { name: "Mans Zelmerlow - Walk With Me.mp3", url: "Songs 2/Mans Zelmerlow - Walk With Me.mp3" },
+  { name: "Manuel Ortega - Say A Word.mp3", url: "Songs 2/Manuel Ortega - Say A Word.mp3" },
+  { name: "Mariah Carey - Beautiful.mp3", url: "Songs 2/Mariah Carey - Beautiful.mp3" },
+  { name: "Mark Medlock - Baby Blue.mp3", url: "Songs 2/Mark Medlock - Baby Blue.mp3" },
+  { name: "Marshall Hain - Dancing In The City.mp3", url: "Songs 2/Marshall Hain - Dancing In The City.mp3" },
+  { name: "Martika - More Than You Know.mp3", url: "Songs 2/Martika - More Than You Know.mp3" },
+  { name: "Matt Cardle - When We Collide.mp3", url: "Songs 2/Matt Cardle - When We Collide.mp3" },
+  { name: "McAlmont and Butler - Falling.mp3", url: "Songs 2/McAlmont and Butler - Falling.mp3" },
+  { name: "Mcfly - Thats The Truth (7th Heaven Club Mix).mp3", url: "Songs 2/Mcfly - Thats The Truth (7th Heaven Club Mix).mp3" },
+  { name: "Mel and Kim - More Than Words Can Say.mp3", url: "Songs 2/Mel and Kim - More Than Words Can Say.mp3" },
+  { name: "Mel B - Feels So Good.mp3", url: "Songs 2/Mel B - Feels So Good.mp3" },
+  { name: "Melanie C - On The Horizon.mp3", url: "Songs 2/Melanie C - On The Horizon.mp3" },
+  { name: "Mero - It Must Be Love.mp3", url: "Songs 2/Mero - It Must Be Love.mp3" },
+  { name: "Michael Bolton - Can I Touch You There.mp3", url: "Songs 2/Michael Bolton - Can I Touch You There.mp3" },
+  { name: "Michael Buble and Bryan Adams - After All.mp3", url: "Songs 2/Michael Buble and Bryan Adams - After All.mp3" },
+  { name: "Michael Jackson - Stranger In Moscow.mp3", url: "Songs 2/Michael Jackson - Stranger In Moscow.mp3" },
+     { name: "Michael Jackson - Human Nature.mp3", url: "Songs 2/Michael Jackson - Human Nature.mp3" },
+  { name: "Michael Moog - That Sound.mp3", url: "Songs 2/Michael Moog - That Sound.mp3" },
+  { name: "Michelle Gayle - Looking Up.mp3", url: "Songs 2/Michelle Gayle - Looking Up.mp3" },
+  { name: "Mickey Joe Harte - Weve Got The World.mp3", url: "Songs 2/Mickey Joe Harte - Weve Got The World.mp3" },
+  { name: "Mike Posner and Salem Ilese - Howling At The Moon.mp3", url: "Songs 2/Mike Posner and Salem Ilese - Howling At The Moon.mp3" },
+  { name: "Mila J - Wait.mp3", url: "Songs 2/Mila J - Wait.mp3" },
+  { name: "Milk Inc - In My Eyes.mp3", url: "Songs 2/Milk Inc - In My Eyes.mp3" },
+  { name: "Mimi Webb - Dumb Love.mp3", url: "Songs 2/Mimi Webb - Dumb Love.mp3" },
+  { name: "Mish Mash - Speechless.mp3", url: "Songs 2/Mish Mash - Speechless.mp3" },
+  { name: "MNEK - The Rhythm.mp3", url: "Songs 2/MNEK - The Rhythm.mp3" },
+  { name: "Mon A Q - Stay In Love.mp3", url: "Songs 2/Mon A Q - Stay In Love.mp3" },
+  { name: "Monsta X - You Cant Hold My Heart.mp3", url: "Songs 2/Monsta X - You Cant Hold My Heart.mp3" },
+  { name: "N Sync - Ill Never Stop.mp3", url: "Songs 2/N Sync - Ill Never Stop.mp3" },
+  { name: "N Sync - That Girl.mp3", url: "Songs 2/N Sync - That Girl.mp3" },
+  { name: "N Sync - U Drive Me Crazy.mp3", url: "Songs 2/N Sync - U Drive Me Crazy.mp3" },
+  { name: "Natasha Bedingfield - Pocketful of Sunshine.mp3", url: "Songs 2/Natasha Bedingfield - Pocketful of Sunshine.mp3" },
+  { name: "N-Dubz - I Need You.mp3", url: "Songs 2/N-Dubz - I Need You.mp3" },
+  { name: "Nelly - Hey Porsche.mp3", url: "Songs 2/Nelly - Hey Porsche.mp3" },
+  { name: "Newton Faulkner - If This Is It.mp3", url: "Songs 2/Newton Faulkner - If This Is It.mp3" },
+  { name: "Nightcrawlers - Never Knew Love.mp3", url: "Songs 2/Nightcrawlers - Never Knew Love.mp3" },
+  { name: "No Angels - Lost In You.mp3", url: "Songs 2/No Angels - Lost In You.mp3" },
+  { name: "Nona Gaye - Overjoyed.mp3", url: "Songs 2/Nona Gaye - Overjoyed.mp3" },
+  { name: "N-tyce - Boom Boom.mp3", url: "Songs 2/N-tyce - Boom Boom.mp3" },
+  { name: "Oasis - The Hindu Times.mp3", url: "Songs 2/Oasis - The Hindu Times.mp3" },
+  { name: "Oleta Adams - Never Knew Love.mp3", url: "Songs 2/Oleta Adams - Never Knew Love.mp3" },
+  { name: "Olivia Dean - Man I Need.mp3", url: "Songs 2/Olivia Dean - Man I Need.mp3" },
+  { name: "Omarion - Ice Box.mp3", url: "Songs 2/Omarion - Ice Box.mp3" },
+  { name: "OMD - Souvenir.mp3", url: "Songs 2/OMD - Souvenir.mp3" },
+  { name: "OMD - Stand Above Me.mp3", url: "Songs 2/OMD - Stand Above Me.mp3" },
+  { name: "OMD vs Sash - Enola Gay.mp3", url: "Songs 2/OMD vs Sash - Enola Gay.mp3" },
+  { name: "Peach - On My Own.mp3", url: "Songs 2/Peach - On My Own.mp3" },
+  { name: "Peter Andre - Thats Where Ill Belong.mp3", url: "Songs 2/Peter Andre - Thats Where Ill Belong.mp3" },
+  { name: "Peter Cox - What A Fool Believes.mp3", url: "Songs 2/Peter Cox - What A Fool Believes.mp3" },
+  { name: "Peter Gabriel - Solsbury Hill.mp3", url: "Songs 2/Peter Gabriel - Solsbury Hill.mp3" },
+  { name: "Peter Wilson - Dont Call Me Angel.mp3", url: "Songs 2/Peter Wilson - Dont Call Me Angel.mp3" },
+  { name: "Peyton - A Higher Place.mp3", url: "Songs 2/Peyton - A Higher Place.mp3" },
+  { name: "Philip George - Same Love.mp3", url: "Songs 2/Philip George - Same Love.mp3" },
+  { name: "Phoenix Stone - Kiss.mp3", url: "Songs 2/Phoenix Stone - Kiss.mp3" },
+  { name: "PinkPantheress and Kylie Minogue - Stateside.mp3", url: "Songs 2/PinkPantheress and Kylie Minogue - Stateside.mp3" },
+  { name: "Play - Im Gonna Make You Love Me.mp3", url: "Songs 2/Play - Im Gonna Make You Love Me.mp3" },
+  { name: "PNAU - The Hard Way.mp3", url: "Songs 2/PNAU - The Hard Way.mp3" },
+  { name: "Pure Shores - Back On My Love.mp3", url: "Songs 2/Pure Shores - Back On My Love.mp3" },
+  { name: "Queen - Best Friend.mp3", url: "Songs 2/Queen - Best Friend.mp3" },
+  { name: "Rebel MC - Better World.mp3", url: "Songs 2/Rebel MC - Better World.mp3" },
+  { name: "Richard Traviss - Heart Of Mine.mp3", url: "Songs 2/Richard Traviss - Heart Of Mine.mp3" },
+  { name: "Ricky Muscat - Why Cant You Love Me.mp3", url: "Songs 2/Ricky Muscat - Why Cant You Love Me.mp3" },
+  { name: "Right Said Fred - Bumped.mp3", url: "Songs 2/Right Said Fred - Bumped.mp3" },
+  { name: "Rihanna - Dont Stop The Music.mp3", url: "Songs 2/Rihanna - Dont Stop The Music.mp3" },
+  { name: "Rihanna - Hating On The Club.mp3", url: "Songs 2/Rihanna - Hating On The Club.mp3" },
+  { name: "Rihanna - Pour It Up.mp3", url: "Songs 2/Rihanna - Pour It Up.mp3" },
+  { name: "Rihanna - Te Amo.mp3", url: "Songs 2/Rihanna - Te Amo.mp3" },
+  { name: "Rihanna - Whos That Chick.mp3", url: "Songs 2/Rihanna - Whos That Chick.mp3" },
+  { name: "Robin S - Love For Love.mp3", url: "Songs 2/Robin S - Love For Love.mp3" },
+  { name: "Robyn - Dancing On My Own.mp3", url: "Songs 2/Robyn - Dancing On My Own.mp3" },
+  { name: "Robyn - Moonlight.mp3", url: "Songs 2/Robyn - Moonlight.mp3" },
+  { name: "Robyn - Show Me Love.mp3", url: "Songs 2/Robyn - Show Me Love.mp3" },
+  { name: "Zara Larsson - Midnight Sun.mp3", url: "Songs 2/Zara Larsson - Midnight Sun.mp3" },
+  { name: "Rod Stewart - The Motown Song.mp3", url: "Songs 2/Rod Stewart - The Motown Song.mp3" },
+  { name: "Ron Hagen and Al Exander - Last Minute.mp3", url: "Songs 2/Ron Hagen and Al Exander - Last Minute.mp3" },
+  { name: "Ronan Keating - Blown Away.mp3", url: "Songs 2/Ronan Keating - Blown Away.mp3" },
+  { name: "Ronan Keating - Heal Me.mp3", url: "Songs 2/Ronan Keating - Heal Me.mp3" },
+  { name: "Ronan Keating - Life Is A Rollercoaster.mp3", url: "Songs 2/Ronan Keating - Life Is A Rollercoaster.mp3" },
+  { name: "S Club - Alive.mp3", url: "Songs 2/S Club - Alive.mp3" },
+  { name: "Salt N Pepa - Expression.mp3", url: "Songs 2/Salt N Pepa - Expression.mp3" },
+  { name: "Same Difference - Shine On Forever.mp3", url: "Songs 2/Same Difference - Shine On Forever.mp3" },
+  { name: "Scissor Sisters - Fire With Fire.mp3", url: "Songs 2/Scissor Sisters - Fire With Fire.mp3" },
+  { name: "Seal - My Vision.mp3", url: "Songs 2/Seal - My Vision.mp3" },
+  { name: "Sean Maguire - Now Ive Found You.mp3", url: "Songs 2/Sean Maguire - Now Ive Found You.mp3" },
+  { name: "Sean Maguire - Suddenly.mp3", url: "Songs 2/Sean Maguire - Suddenly.mp3" },
+  { name: "SG Lewis - Heat.mp3", url: "Songs 2/SG Lewis - Heat.mp3" },
+  { name: "Shakin Stevens - What Do You Want To Make Those Eyes At Me For.mp3", url: "Songs 2/Shakin Stevens - What Do You Want To Make Those Eyes At Me For.mp3" },
+  { name: "Shakira - Hips Dont Lie.mp3", url: "Songs 2/Shakira - Hips Dont Lie.mp3" },
+  { name: "Shawn Mendes - Nervous.mp3", url: "Songs 2/Shawn Mendes - Nervous.mp3" },
+  { name: "Shawn Mendes - Summer Of Love.mp3", url: "Songs 2/Shawn Mendes - Summer Of Love.mp3" },
+  { name: "Shay Wolf - Sunny Days.mp3", url: "Songs 2/Shay Wolf - Sunny Days.mp3" },
+  { name: "Shayne Ward - Breathless.mp3", url: "Songs 2/Shayne Ward - Breathless.mp3" },
+  { name: "Shayne Ward - No U Hang Up.mp3", url: "Songs 2/Shayne Ward - No U Hang Up.mp3" },
+  { name: "Shola Ama - Someday Ill Find You.mp3", url: "Songs 2/Shola Ama - Someday Ill Find You.mp3" },
+  { name: "Shouse & David Guetta - Live Without Love.mp3", url: "Songs 2/Shouse & David Guetta - Live Without Love.mp3" },
+  { name: "Sid Owen - Good Thing Going.mp3", url: "Songs 2/Sid Owen - Good Thing Going.mp3" },
+  { name: "Sigma - Glitterball.mp3", url: "Songs 2/Sigma - Glitterball.mp3" },
+  { name: "Sixpence None The Richer - Kiss Me.mp3", url: "Songs 2/Sixpence None The Richer - Kiss Me.mp3" },
+  { name: "Slamm - Cant Get By.mp3", url: "Songs 2/Slamm - Cant Get By.mp3" },
+  { name: "Sneaker Pimps - Spin Spin Sugar.mp3", url: "Songs 2/Sneaker Pimps - Spin Spin Sugar.mp3" },
+  { name: "Sniff N The Tears - Drivers Seat.mp3", url: "Songs 2/Sniff N The Tears - Drivers Seat.mp3" },
+  { name: "Sonia - Only Fools (Never Fall In Love).mp3", url: "Songs 2/Sonia - Only Fools (Never Fall In Love).mp3" },
+  { name: "Souldecision - Ooh Its Kinda Crazy.mp3", url: "Songs 2/Souldecision - Ooh Its Kinda Crazy.mp3" },
+  { name: "Souldecision - Stay With Me.mp3", url: "Songs 2/Souldecision - Stay With Me.mp3" },
+  { name: "Spacer.mp3", url: "Songs 2/Spacer.mp3" },
+  { name: "Spike - Moment Of Love.mp3", url: "Songs 2/Spike - Moment Of Love.mp3" },
+  { name: "Stacy Lattisaw - Jump to the Beat.mp3", url: "Songs 2/Stacy Lattisaw - Jump to the Beat.mp3" },
+  { name: "Steve Balsamo - Sugar For The Soul.mp3", url: "Songs 2/Steve Balsamo - Sugar For The Soul.mp3" },
+  { name: "Strike - U Sure Do.mp3", url: "Songs 2/Strike - U Sure Do.mp3" },
+  { name: "Sugababes - Red Dress.mp3", url: "Songs 2/Sugababes - Red Dress.mp3" },
+  { name: "Sugababes - Soul Sound.mp3", url: "Songs 2/Sugababes - Soul Sound.mp3" },
+  { name: "Sugababes - Stronger.mp3", url: "Songs 2/Sugababes - Stronger.mp3" },
+  { name: "SX3 - Stay.mp3", url: "Songs 2/SX3 - Stay.mp3" },
+  { name: "Sydney Youngblood and Jesse Ritch - Sit And Wait.mp3", url: "Songs 2/Sydney Youngblood and Jesse Ritch - Sit And Wait.mp3" },
+  { name: "Sydney Youngblood and Tom Pulse - If Only I Could.mp3", url: "Songs 2/Sydney Youngblood and Tom Pulse - If Only I Could.mp3" },
+  { name: "Taio Cruz - I Just Wanna Know.mp3", url: "Songs 2/Taio Cruz - I Just Wanna Know.mp3" },
+  { name: "Take 5 - Never Had It So Good.mp3", url: "Songs 2/Take 5 - Never Had It So Good.mp3" },
+  { name: "Take That - Get Ready For It.mp3", url: "Songs 2/Take That - Get Ready For It.mp3" },
+  { name: "Talk Talk - Lifes What You Make It.mp3", url: "Songs 2/Talk Talk - Lifes What You Make It.mp3" },
+  { name: "Tara Kemp - Piece Of My Heart.mp3", url: "Songs 2/Tara Kemp - Piece Of My Heart.mp3" },
+  { name: "Technotronic - Move This.mp3", url: "Songs 2/Technotronic - Move This.mp3" },
+  { name: "Texas - Mr Haze.mp3", url: "Songs 2/Texas - Mr Haze.mp3" },
+  { name: "The Adventures of Stevie V - Jealousy.mp3", url: "Songs 2/The Adventures of Stevie V - Jealousy.mp3" },
+  { name: "The Bangles - Something That You Said.mp3", url: "Songs 2/The Bangles - Something That You Said.mp3" },
+  { name: "The Bluetones - Slight Return.mp3", url: "Songs 2/The Bluetones - Slight Return.mp3" },
+  { name: "The Buggles - Video Killed The Radio Star.mp3", url: "Songs 2/The Buggles - Video Killed The Radio Star.mp3" },
+  { name: "The Chantoozies - Wanna Be Up.mp3", url: "Songs 2/The Chantoozies - Wanna Be Up.mp3" },
+  { name: "The Corrs - One Night.mp3", url: "Songs 2/The Corrs - One Night.mp3" },
+  { name: "The Course - Ready Or Not.mp3", url: "Songs 2/The Course - Ready Or Not.mp3" },
+  { name: "The Eves - Not A Love Song.mp3", url: "Songs 2/The Eves - Not A Love Song.mp3" },
+  { name: "The Jacksons - Everybody.mp3", url: "Songs 2/The Jacksons - Everybody.mp3" },
+  { name: "The Killers - Caution.mp3", url: "Songs 2/The Killers - Caution.mp3" },
+  { name: "The Pussycat Dolls - Stick with U.mp3", url: "Songs 2/The Pussycat Dolls - Stick with U.mp3" },
+  { name: "The Racketeers - A Night In New York.mp3", url: "Songs 2/The Racketeers - A Night In New York.mp3" },
+  { name: "The Saturdays - Missing You.mp3", url: "Songs 2/The Saturdays - Missing You.mp3" },
+  { name: "The Style Council - My Ever Changing Moods.mp3", url: "Songs 2/The Style Council - My Ever Changing Moods.mp3" },
+  { name: "The System - Come As You Are.mp3", url: "Songs 2/The System - Come As You Are.mp3" },
+  { name: "The thrill im in.mp3", url: "Songs 2/The thrill im in.mp3" },
+  { name: "The Wanted - Show Me Love.mp3", url: "Songs 2/The Wanted - Show Me Love.mp3" },
+  { name: "Tim Berg - Seek Bromance.mp3", url: "Songs 2/Tim Berg - Seek Bromance.mp3" },
+  { name: "Tina Arena - Sorrento Moon.mp3", url: "Songs 2/Tina Arena - Sorrento Moon.mp3" },
+  { name: "Tinie Tempah - Pass Out.mp3", url: "Songs 2/Tinie Tempah - Pass Out.mp3" },
+  { name: "Toploader - Dancing In The Moonlight.mp3", url: "Songs 2/Toploader - Dancing In The Moonlight.mp3" },
+  { name: "Total Contrast - Hit And Run.mp3", url: "Songs 2/Total Contrast - Hit And Run.mp3" },
+  { name: "Total Touch - Doo Be La Dee.mp3", url: "Songs 2/Total Touch - Doo Be La Dee.mp3" },
+  { name: "Toto - Hold The Line.mp3", url: "Songs 2/Toto - Hold The Line.mp3" },
+  { name: "Touche - All I Want.mp3", url: "Songs 2/Touche - All I Want.mp3" },
+  { name: "Touche - Dont Walk Away.mp3", url: "Songs 2/Touche - Dont Walk Away.mp3" },
+  { name: "Touche - I Want Your Heart.mp3", url: "Songs 2/Touche - I Want Your Heart.mp3" },
+  { name: "Touche - Where Did You Sleep.mp3", url: "Songs 2/Touche - Where Did You Sleep.mp3" },
+  { name: "Train - When I Look to the Sky.mp3", url: "Songs 2/Train - When I Look to the Sky.mp3" },
+  { name: "Travis - Sing.mp3", url: "Songs 2/Travis - Sing.mp3" },
+  { name: "True Colours.mp3", url: "Songs 2/True Colours.mp3" },
+  { name: "T-Shirt - Sexy Thing.mp3", url: "Songs 2/T-Shirt - Sexy Thing.mp3" },
+  { name: "T-Spoon - Someone Loves You Honey.mp3", url: "Songs 2/T-Spoon - Someone Loves You Honey.mp3" },
+  { name: "Tutti Frutti - New Order.mp3", url: "Songs 2/Tutti Frutti - New Order.mp3" },
+  { name: "Two Man Sound - Copacabana.mp3", url: "Songs 2/Two Man Sound - Copacabana.mp3" },
+  { name: "U2 - Whos Gonna Ride Your Wild Horses.mp3", url: "Songs 2/U2 - Whos Gonna Ride Your Wild Horses.mp3" },
+  { name: "UB40 - Always There.mp3", url: "Songs 2/UB40 - Always There.mp3" },
+  { name: "Unnamed 4.mp3", url: "Songs 2/Unnamed 4.mp3" },
+  { name: "Unnamed 6.mp3", url: "Songs 2/Unnamed 6.mp3" },
+  { name: "Unnamed11.mp3", url: "Songs 2/Unnamed11.mp3" },
+  { name: "Unnamed12.mp3", url: "Songs 2/Unnamed12.mp3" },
+  { name: "Unnamed13.mp3", url: "Songs 2/Unnamed13.mp3" },
+  { name: "Unnamed14.mp3", url: "Songs 2/Unnamed14.mp3" },
+  { name: "Unnamed15.mp3", url: "Songs 2/Unnamed15.mp3" },
+  { name: "Unnamedd1.mp3", url: "Songs 2/Unnamedd1.mp3" },
+  { name: "Unnamedlead.mp3", url: "Songs 2/Unnamedlead.mp3" },
+     { name: "Kehlani - After Hours.mp3", url: "Songs 2/Kehlani - After Hours.mp3" },
+     { name: "Serena - Ridin High.mp3", url: "Songs 2/Serena - Ridin High.mp3" },
+  { name: "Usher - Yeah.mp3", url: "Songs 2/Usher - Yeah.mp3" },
+  { name: "Vanessa Amorosi - Absolutely Everybody.mp3", url: "Songs 2/Vanessa Amorosi - Absolutely Everybody.mp3" },
+  { name: "Victoria Beckham - I.O.U.mp3", url: "Songs 2/Victoria Beckham - I.O.U.mp3" },
+  { name: "Wasteland - Rich Friends.mp3", url: "Songs 2/Wasteland - Rich Friends.mp3" },
+  { name: "Westlife - No No.mp3", url: "Songs 2/Westlife - No No.mp3" },
+  { name: "Westlife - Open Your Heart.mp3", url: "Songs 2/Westlife - Open Your Heart.mp3" },
+  { name: "Wham - Club Tropicana.mp3", url: "Songs 2/Wham - Club Tropicana.mp3" },
+  { name: "Whigfield - Saturday Night.mp3", url: "Songs 2/Whigfield - Saturday Night.mp3" },
+  { name: "White and Torch - Whos Asking You.mp3", url: "Songs 2/White and Torch - Whos Asking You.mp3" },
+  { name: "Why Dont We - Love Back.mp3", url: "Songs 2/Why Dont We - Love Back.mp3" },
+  { name: "Will Young - Joy.mp3", url: "Songs 2/Will Young - Joy.mp3" },
+  { name: "Wizzard - See My Baby Jive.mp3", url: "Songs 2/Wizzard - See My Baby Jive.mp3" },
+  { name: "Wolf Alice - Just Two Girls.mp3", url: "Songs 2/Wolf Alice - Just Two Girls.mp3" },
+  { name: "Worlds Apart - Heaven Must Be Missing An Angel.mp3", url: "Songs 2/Worlds Apart - Heaven Must Be Missing An Angel.mp3" },
+  { name: "Worlds Apart - Same Old Promises.mp3", url: "Songs 2/Worlds Apart - Same Old Promises.mp3" },
+  { name: "Wreckx-N-Effect - Rump Shaker.mp3", url: "Songs 2/Wreckx-N-Effect - Rump Shaker.mp3" },
+  { name: "Years and Years - Sweet Talker.mp3", url: "Songs 2/Years and Years - Sweet Talker.mp3" }
+
+];
+
+
+    /* RADIO STATIONS */
+    const radioItems = [
+        { name: "Super Q Radio UK", url: "https://hello.citrus3.com:8184/stream" },
+        { name: "Atlantic Extra", url: "https://cwilliams78.radioca.st/stream" },
+        { name: "Hot 103 & 97", url: "https://a9.asurahosting.com:7640/radio.mp3" },
+        { name: "Original Hot 103", url: "https://streaming.live365.com/a77423" },
+        { name: "Greatest Hits Non-Stop", url: "http://s8.myradiostream.com:58238/listen.mp3" },
+        { name: "Pride Radio New York", url: "https://stream.revma.ihrhls.com/zc3949" },
+        { name: "The Breeze New York", url: "https://stream.revma.ihrhls.com/zc8143" },
+        { name: "Fresh Radio", url: "https://s36.radiolize.com/radio/8170/radio.mp3" }
+    ];
+
+    /* SHUFFLE ENGINE */
+const shuffleState = {
+        mp3_1: { order: [], index: 0 },
+        mp3_2: { order: [], index: 0 }
+    };
+
+    function getShuffleKey(mode) {
+        return mode === MODE_MP3_1 ? "mp3_1" : "mp3_2";
+    }
+
+    function buildShuffleOrder(length) {
+        const arr = [...Array(length).keys()];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function ensureShuffle(mode) {
+        const playlist = mode === MODE_MP3_1 ? playlist1 : playlist2;
+        const key = getShuffleKey(mode);
+        const state = shuffleState[key];
+
+        if (!playlist.length) {
+            state.order = [];
+            state.index = 0;
+            return;
+        }
+
+        if (state.order.length !== playlist.length) {
+            state.order = buildShuffleOrder(playlist.length);
+            state.index = 0;
+            return;
+        }
+
+        if (state.index >= state.order.length) {
+            state.order = buildShuffleOrder(playlist.length);
+            state.index = 0;
+        }
+    }
+
+    function updateMp3Title(filename) {
+        let clean = filename.replace(/\.mp3$/i, "");
+        clean = clean.replace(/^.*?\//, "");
+
+        radioScreenLine1.textContent =
+            currentMode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2";
+        radioScreenLine1.classList.remove("live-red");
+        radioScreenLine1.classList.remove("mp3-title");
+
+        radioScreenLine2.textContent = clean;
+        radioScreenLine2.classList.add("mp3-title");
+    }
+
+    function getNextTrack(mode) {
+        ensureShuffle(mode);
+        const key = getShuffleKey(mode);
+        const state = shuffleState[key];
+
+        if (!state.order.length) return null;
+
+        state.index++;
+        if (state.index >= state.order.length) state.index = 0;
+
+        return state.order[state.index];
+    }
+
+    function fixPath(path) {
+        return encodeURI(path);
+    }
+
+    function updateSonyHeader(line1, line2, flicker = false) {
+        radioScreenLine1.textContent = line1;
+        radioScreenLine2.textContent = line2;
+
+        if (flicker) {
+            radioScreenLine1.classList.remove("flicker");
+            radioScreenLine2.classList.remove("flicker");
+            void radioScreenLine1.offsetWidth;
+            void radioScreenLine2.offsetWidth;
+            radioScreenLine1.classList.add("flicker");
+            radioScreenLine2.classList.add("flicker");
+        }
+    }
+
+    function getCurrentAudio() {
+        if (currentMode === MODE_RADIO) return audioRadio;
+        if (currentMode === MODE_MP3_1) return audioMp3_1;
+        if (currentMode === MODE_MP3_2) return audioMp3_2;
+        return null;
+    }
+
+    function fadeIn(audio, duration = 0.15) {
+        const target = Math.round(parseInt(volSlider.value) / 10) * 10 / 100;
+        const start = audio.volume;
+        const step = (target - start) / (duration * 60);
+
+        const fade = setInterval(() => {
+            audio.volume = Math.min(target, audio.volume + step);
+            if (audio.volume >= target) clearInterval(fade);
+        }, 16);
+    }
+
+    let prewarmAudio = new Audio();
+    prewarmAudio.preload = "auto";
+
+    function updateBarAnimation() {
+        const bars = document.querySelector(".led-bars");
+        if (isPlaying) {
+            bars.classList.add("playing");
+        } else {
+            bars.classList.remove("playing");
+        }
+    }
+
+   function playRadio(index) {
+    currentRadioIndex = (index + radioItems.length) % radioItems.length;
+    const station = radioItems[currentRadioIndex];
+
+    updateSonyHeader(station.name, "LIVE", true);
+
+    // ⭐ Apply correct RADIO styling AFTER header update
+    requestAnimationFrame(() => {
+        radioScreenLine2.classList.remove("mp3-title");  // remove MP3 small text
+        radioScreenLine2.classList.add("live-red");       // apply red LIVE LED
+    });
+
+    audioRadio.src = station.url;
+    audioRadio.volume = volSlider.value / 100;
+
+    audioRadio.load();
+    audioRadio.play().then(() => {
+        isPlaying = true;
+        updateBarAnimation();
+        setPlayIcon(true);
+        fadeIn(audioRadio);
+        ledVol.classList.add("playing");
+    }).catch(() => {
+        isPlaying = false;
+        updateBarAnimation();
+        setPlayIcon(false);
+        ledVol.classList.remove("playing");
+    });
+
+    audioRadio.onpause = () => {
+        isPlaying = false;
+        updateBarAnimation();
+        ledVol.classList.remove("playing");
+    };
+}
+
+
+
+    function playNextMp3(mode) {
+        const playlist = mode === MODE_MP3_1 ? playlist1 : playlist2;
+        const audio = mode === MODE_MP3_1 ? audioMp3_1 : audioMp3_2;
+
+        if (!playlist.length) {
+            updateSonyHeader(
+                mode === MODE_MP3_1 ? "NO TRACKS IN MP3 1" : "NO TRACKS IN MP3 2",
+                "ADD PLAYLIST",
+                true
+            );
+            isPlaying = false;
+            updateBarAnimation();
+            setPlayIcon(false);
+            return;
+        }
+
+        const index = getNextTrack(mode);
+        if (index === null) return;
+
+        const track = playlist[index];
+
+        radioScreenLine2.classList.remove("live-red");
+        updateSonyHeader(
+            mode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2",
+            ""
+        );
+
+        audio.src = fixPath(track.url);
+
+        const v = Math.round(parseInt(volSlider.value) / 10) * 10;
+        audio.volume = v / 100;
+
+        audio.load();
+
+        audio.play().then(() => {
+            isPlaying = true;
+            updateBarAnimation();
+            setPlayIcon(true);
+            ledVol.classList.add("playing");
+            fadeIn(audio);
+            updateMp3Title(track.url);
+        }).catch(() => {
+            isPlaying = false;
+            updateBarAnimation();
+            setPlayIcon(false);
+        });
+
+        audio.onpause = () => {
+            isPlaying = false;
+            updateBarAnimation();
+            ledVol.classList.remove("playing");
+        };
+
+        audio.onerror = () => {
+            isPlaying = false;
+            updateBarAnimation();
+        };
+
+        audio.onended = () => {
+            isPlaying = false;
+            updateBarAnimation();
+            playNextMp3(mode);
+        };
+    }
+
+    function setPlayIcon(playing) {
+        iconPlay.style.display = playing ? "none" : "block";
+        iconPause.style.display = playing ? "block" : "none";
+    }
+
+    function stopAll() {
+        audioRadio.pause();
+        audioMp3_1.pause();
+        audioMp3_2.pause();
+        isPlaying = false;
+        updateBarAnimation();
+        ledVol.classList.remove("playing");
+    }
+
+    function switchMode(mode) {
+        if (mode === currentMode) return;
+
+        stopAll();
+        isPlaying = false;
+        updateBarAnimation();
+        setPlayIcon(false);
+
+        ledRadio.classList.remove("active");
+        ledUsb.classList.remove("active");
+
+        currentMode = mode;
+
+        btnRadio.classList.toggle("active", mode === MODE_RADIO);
+        btnMp3_1.classList.toggle("active", mode === MODE_MP3_1);
+        btnMp3_2.classList.toggle("active", mode === MODE_MP3_2);
+
+        if (mode === MODE_RADIO) {
+    ledRadio.classList.add("active");
+
+    transportRow.style.display = "flex";
+    btnPrev.style.display = "flex";
+    mp3ControlsRow.style.display = "none";
+
+    // 1) Update header first
+    updateSonyHeader("LOADING", "LIVE", true);
+
+    // 2) Apply red LED AFTER header update
+    requestAnimationFrame(() => {
+        radioScreenLine2.classList.add("live-red");
+    });
+
+    // 3) Now safely load radio
+    audioRadio.src = radioItems[currentRadioIndex].url;
+    audioRadio.load();
+    playRadio(currentRadioIndex);
+
+
+        } else {
+            ledUsb.classList.add("active");
+
+            transportRow.style.display = "none";
+            btnPrev.style.display = "none";
+            mp3ControlsRow.style.display = "flex";
+
+            radioScreenLine2.classList.remove("live-red");
+
+            const headerLine2 =
+                mode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2";
+
+            updateSonyHeader("LOADING", headerLine2, false);
+
+            audioRadio.pause();
+            audioRadio.src = "";
+
+            playNextMp3(mode);
+        }
+    }
+
+    mp3Back15.addEventListener("click", () => {
+        const audio = getCurrentAudio();
+        if (audio) audio.currentTime = Math.max(0, audio.currentTime - 15);
+    });
+
+    mp3Forward15.addEventListener("click", () => {
+        const audio = getCurrentAudio();
+        if (audio && audio.duration)
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
+    });
+
+    mp3PlayPause.addEventListener("click", () => {
+        const audio = getCurrentAudio();
+        if (!audio) return;
+
+        if (audio.paused) {
+            audio.play();
+        } else {
+            audio.pause();
+        }
+    });
+
+    mp3Next.addEventListener("click", () => {
+        if (currentMode === MODE_MP3_1) playNextMp3(MODE_MP3_1);
+        if (currentMode === MODE_MP3_2) playNextMp3(MODE_MP3_2);
+    });
+
+    audioMp3_1.onplay = audioMp3_2.onplay = () => {
+        isPlaying = true;
+        updateBarAnimation();
+        ledVol.classList.add("playing");
+        mp3PlayPause.textContent = "⏸";
+    };
+
+    audioMp3_1.onpause = audioMp3_2.onpause = () => {
+        isPlaying = false;
+        updateBarAnimation();
+        ledVol.classList.remove("playing");
+        mp3PlayPause.textContent = "▶";
+    };
+
+    btnRadio.addEventListener("click", () => switchMode(MODE_RADIO));
+    btnMp3_1.addEventListener("click", () => switchMode(MODE_MP3_1));
+    btnMp3_2.addEventListener("click", () => switchMode(MODE_MP3_2));
+
+    btnPrev.addEventListener("click", () => {
+        if (currentMode === MODE_RADIO) playRadio(currentRadioIndex - 1);
+    });
+
+    btnNext.addEventListener("click", () => {
+    if (currentMode === MODE_RADIO) {
+        playRadio(currentRadioIndex + 1);
+    } else if (currentMode === MODE_MP3_1 || currentMode === MODE_MP3_2) {
+        playNextMp3(currentMode);
+    }
+});
+
+btnPlayPause.addEventListener("click", () => {
+    const audio = getCurrentAudio();
+    if (!audio) return;
+
+    let v = Math.round(parseInt(volSlider.value) / 10) * 10;
+    volSlider.value = v;
+    audio.volume = v / 100;
+
+    if (audio.paused) {
+        audio.play().then(() => {
+            isPlaying = true;
+            setPlayIcon(true);
+            updateBarAnimation();
+            ledVol.classList.add("playing");
+            fadeIn(audio);
+        });
+    } else {
+        audio.pause();
+        isPlaying = false;
+        setPlayIcon(false);
+        updateBarAnimation();
+        ledVol.classList.remove("playing");
+    }
+});
+
+/* ===========================
+   VOLUME
+   =========================== */
+
+function applyVolumeToCurrentAudio(v) {
+    const audio = getCurrentAudio();
+    if (audio) audio.volume = v / 100;
+    ledVol.textContent = "VOL " + v + "%";
+}
+
+volSlider.addEventListener("input", () => {
+    let v = parseInt(volSlider.value);
+    v = Math.round(v / 10) * 10;
+    volSlider.value = v;
+    applyVolumeToCurrentAudio(v);
+});
+
+volUp.addEventListener("click", () => {
+    let v = parseInt(volSlider.value);
+    v = Math.min(100, v + 10);
+    volSlider.value = v;
+    applyVolumeToCurrentAudio(v);
+});
+
+volDown.addEventListener("click", () => {
+    let v = parseInt(volSlider.value);
+    v = Math.max(0, v - 10);
+    volSlider.value = v;
+    applyVolumeToCurrentAudio(v);
+});
+
+/* ===========================
+   BACKGROUND
+   =========================== */
+
+const preloadImages = (arr) => {
+    arr.forEach(src => {
+        const img = new Image();
+        img.src = src;
+    });
+};
+
+preloadImages([
+    "backgrounds/bg_day1.jpg",
+    "backgrounds/bg_day2.jpg",
+    "backgrounds/bg_day3.jpg",
+    "backgrounds/bg_night1.jpg",
+    "backgrounds/bg_night2.jpg",
+    "backgrounds/bg_night3.jpg"
+]);
+
+const dayBackgrounds = [
+    "backgrounds/bg_day1.jpg",
+    "backgrounds/bg_day2.jpg",
+    "backgrounds/bg_day3.jpg"
+];
+
+const nightBackgrounds = [
+    "backgrounds/bg_night1.jpg",
+    "backgrounds/bg_night2.jpg",
+    "backgrounds/bg_night3.jpg"
+];
+
+const hour = new Date().getHours();
+const isNight = (hour >= 20 || hour < 6);
+
+const chosenBackground = isNight
+    ? nightBackgrounds[Math.floor(Math.random() * nightBackgrounds.length)]
+    : dayBackgrounds[Math.floor(Math.random() * dayBackgrounds.length)];
+
+document.getElementById("bg").style.backgroundImage = `url('${chosenBackground}')`;
+
+currentMode = null;
+radioScreenLine1.textContent = "";
+radioScreenLine2.textContent = "";
+radioScreenLine2.classList.remove("live-red");
+setPlayIcon(false);
+
+applyVolumeToCurrentAudio(parseInt(volSlider.value));
+updateBarAnimation();
+
+audioRadio.src = radioItems[currentRadioIndex].url;
+audioRadio.load();
+
+/* ===========================
+   MSN CHAT BOX JS
+   =========================== */
+
+function saveTimestamp() {
+    localStorage.setItem("msn_lastMessageTime", Date.now());
+}
+
+function checkForExpiry() {
+    const last = localStorage.getItem("msn_lastMessageTime");
+    if (!last) return;
+
+    const now = Date.now();
+    const hours24 = 24 * 60 * 60 * 1000;
+
+    if (now - last > hours24) {
+        document.getElementById("chatMessages").innerHTML = "";
+        localStorage.removeItem("msn_lastMessageTime");
+    }
+}
+
+checkForExpiry();
+
+function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const messages = document.getElementById("chatMessages");
+
+    if (input.innerHTML.trim() === "") return;
+
+    const msg = document.createElement("div");
+    msg.className = "msg you";
+    msg.innerHTML = input.innerHTML;
+
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+
+    input.innerHTML = "";
+
+    saveTimestamp();
+}
+
+function addEmote(file) {
+    const input = document.getElementById("chatInput");
+    input.innerHTML += ` <img src="emotes/${file}" style="width:16px;height:16px;"> `;
+    input.focus();
+}
+
+/* ⭐ MAKE CHAT FUNCTIONS GLOBAL ⭐ */
+window.sendMessage = sendMessage;
+window.addEmote = addEmote;
+
+}); // END DOMContentLoaded
+</script>
+
+</body>
+</html>
