@@ -684,20 +684,23 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentRadioIndex = 0;
 
 async function updateVisitorCount() {
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; 
     const namespace = "ben_sony_ui";
     const key = "visitors_" + today;
 
     try {
-        const res = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+        const res = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`);
         const data = await res.json();
 
         document.getElementById("visitorsToday").textContent =
-            `today’s visitors (${data.value})`;
+            `Today’s visitors (${data.count})`;
     } catch (err) {
         console.log("Visitor counter error:", err);
+        document.getElementById("visitorsToday").textContent =
+            "Today’s visitors (0)";
     }
 }
+
 
 updateVisitorCount();
 
