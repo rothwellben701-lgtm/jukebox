@@ -1901,7 +1901,7 @@ audioRadio.src = radioItems[currentRadioIndex].url;
 audioRadio.load();
 
 /* ===========================
-   MSN CHAT BOX JS
+   MSN CHAT BOX JS (with localStorage)
    =========================== */
 
 function saveTimestamp() {
@@ -1916,12 +1916,30 @@ function checkForExpiry() {
     const hours24 = 24 * 60 * 60 * 1000;
 
     if (now - last > hours24) {
-        document.getElementById("chatMessages").innerHTML = "";
+        localStorage.removeItem("msn_chatMessages");
         localStorage.removeItem("msn_lastMessageTime");
+        document.getElementById("chatMessages").innerHTML = "";
     }
 }
 
 checkForExpiry();
+
+/* ⭐ Load saved messages on startup */
+(function loadMessages() {
+    const saved = localStorage.getItem("msn_chatMessages");
+    if (saved) {
+        document.getElementById("chatMessages").innerHTML = saved;
+        const box = document.getElementById("chatMessages");
+        box.scrollTop = box.scrollHeight;
+    }
+})();
+
+/* ⭐ Save messages after every send */
+function saveMessages() {
+    const messages = document.getElementById("chatMessages").innerHTML;
+    localStorage.setItem("msn_chatMessages", messages);
+    saveTimestamp();
+}
 
 function sendMessage() {
     const input = document.getElementById("chatInput");
@@ -1938,7 +1956,7 @@ function sendMessage() {
 
     input.innerHTML = "";
 
-    saveTimestamp();
+    saveMessages();  // ⭐ now saves to localStorage
 }
 
 function addEmote(file) {
@@ -1950,6 +1968,7 @@ function addEmote(file) {
 /* ⭐ MAKE CHAT FUNCTIONS GLOBAL ⭐ */
 window.sendMessage = sendMessage;
 window.addEmote = addEmote;
+
 
 }); // END DOMContentLoaded
 </script>
