@@ -1420,6 +1420,10 @@ updateVisitorCount();
   { name: "Westlife - No No.mp3", url: "Songs 2/Westlife - No No.mp3" },
   { name: "Westlife - Open Your Heart.mp3", url: "Songs 2/Westlife - Open Your Heart.mp3" },
   { name: "Wham - Club Tropicana.mp3", url: "Songs 2/Wham - Club Tropicana.mp3" },
+  { name: "Spandau Ballet - Only When You Leave.mp3", url: "Songs 2/Spandau Ballet - Only When You Leave.mp3" },
+     { name: "Cyndi Lauper - Time After Time.mp3", url: "Songs 2/Cyndi Lauper - Time After Time.mp3" },
+     { name: "Five Star - Rock My World.mp3", url: "Songs 2/Five Star - Rock My World.mp3" },
+     { name: "Sister Sledge - Thinking Of You.mp3", url: "Songs 2/Sister Sledge - Thinking Of You.mp3" },
   { name: "Whigfield - Saturday Night.mp3", url: "Songs 2/Whigfield - Saturday Night.mp3" },
   { name: "White and Torch - Whos Asking You.mp3", url: "Songs 2/White and Torch - Whos Asking You.mp3" },
   { name: "Why Dont We - Love Back.mp3", url: "Songs 2/Why Dont We - Love Back.mp3" },
@@ -1866,15 +1870,20 @@ preloadImages([
     "backgrounds/bg_day1.jpg",
     "backgrounds/bg_day2.jpg",
     "backgrounds/bg_day3.jpg",
+    "backgrounds/bg_day4.jpg",
+    "backgrounds/bg_day5.jpg",
     "backgrounds/bg_night1.jpg",
     "backgrounds/bg_night2.jpg",
     "backgrounds/bg_night3.jpg"
 ]);
 
+
 const dayBackgrounds = [
     "backgrounds/bg_day1.jpg",
     "backgrounds/bg_day2.jpg",
-    "backgrounds/bg_day3.jpg"
+    "backgrounds/bg_day3.jpg",
+    "backgrounds/bg_day4.jpg",
+    "backgrounds/bg_day5.jpg"
 ];
 
 const nightBackgrounds = [
@@ -1883,8 +1892,12 @@ const nightBackgrounds = [
     "backgrounds/bg_night3.jpg"
 ];
 
-const hour = new Date().getHours();
-const isNight = (hour >= 20 || hour < 6);
+const now = new Date();
+const hour = now.getHours();
+const minute = now.getMinutes();
+
+// Night starts at 21:30 (9:30 PM) and runs until 06:00
+const isNight = (hour > 21 || (hour === 21 && minute >= 30) || hour < 6);
 
 const chosenBackground = isNight
     ? nightBackgrounds[Math.floor(Math.random() * nightBackgrounds.length)]
