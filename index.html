@@ -548,7 +548,7 @@ html, body {
             </div>
         </div>
 
-<div id="visitorsToday">Today’s visitors (…)</div>
+
 
 
         <div id="radioScreenLine1" class="radio-screen-line1"></div>
@@ -682,31 +682,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentMode = null;
     let isPlaying = false;
     let currentRadioIndex = 0;
-
-async function updateVisitorCount() {
-    const today = new Date().toISOString().split("T")[0];
-    const namespace = "ben_sony_ui";
-    const key = "visitors_" + today;
-
-    try {
-        const res = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`);
-        const data = await res.json();
-
-        document.getElementById("visitorsToday").textContent =
-            `Today’s visitors (${data.count})`;
-    } catch (err) {
-        console.log("Visitor counter error:", err);
-        document.getElementById("visitorsToday").textContent =
-            "Today’s visitors (0)";
-    }
-}
-
-
-
-
-updateVisitorCount();
-
-
 
 
 
