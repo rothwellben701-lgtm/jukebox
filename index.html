@@ -689,7 +689,7 @@ async function updateVisitorCount() {
     const key = "visitors_" + today;
 
     try {
-        const res = await fetch(`https://api.simplecounter.workers.dev/${namespace}/${key}`);
+        const res = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`);
         const data = await res.json();
 
         document.getElementById("visitorsToday").textContent =
@@ -700,6 +700,7 @@ async function updateVisitorCount() {
             "Today’s visitors (0)";
     }
 }
+
 
 
 
