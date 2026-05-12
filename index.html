@@ -1424,7 +1424,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* RADIO STATIONS */
     const radioItems = [
-        { name: "Super Q Radio UK", url: "" },
+        { name: "Super Q Radio UK", url: "https://hello.citrus3.com:8184/stream?type=http" },
+        { name: "Atlantic Radio UK", url: "https://cwilli00.radioca.st/stream" },
         { name: "Atlantic Extra", url: "https://cwilliams78.radioca.st/stream" },
         { name: "Hot 103 & 97", url: "https://a9.asurahosting.com:7640/radio.mp3" },
         { name: "Original Hot 103", url: "https://streaming.live365.com/a77423" },
@@ -1476,18 +1477,28 @@ const shuffleState = {
         }
     }
 
-    function updateMp3Title(filename) {
-        let clean = filename.replace(/\.mp3$/i, "");
-        clean = clean.replace(/^.*?\//, "");
-
+   function updateMp3Title(filename) {
+    // ⭐ Ensure filename is a string
+    if (typeof filename !== "string") {
+        console.warn("Invalid filename passed to updateMp3Title:", filename);
         radioScreenLine1.textContent =
             currentMode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2";
-        radioScreenLine1.classList.remove("live-red");
-        radioScreenLine1.classList.remove("mp3-title");
-
-        radioScreenLine2.textContent = clean;
-        radioScreenLine2.classList.add("mp3-title");
+        radioScreenLine2.textContent = "INVALID FILE";
+        return;
     }
+
+    let clean = filename.replace(/\.mp3$/i, "");
+    clean = clean.replace(/^.*?\//, "");
+
+    radioScreenLine1.textContent =
+        currentMode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2";
+    radioScreenLine1.classList.remove("live-red");
+    radioScreenLine1.classList.remove("mp3-title");
+
+    radioScreenLine2.textContent = clean;
+    radioScreenLine2.classList.add("mp3-title");
+}
+
 
     function getNextTrack(mode) {
         ensureShuffle(mode);
@@ -1556,28 +1567,63 @@ const shuffleState = {
 
     updateSonyHeader(station.name, "LIVE", true);
 
-    // ⭐ Apply correct RADIO styling AFTER header update
+    // Apply correct RADIO styling AFTER header update
     requestAnimationFrame(() => {
         radioScreenLine2.classList.remove("mp3-title");  // remove MP3 small text
         radioScreenLine2.classList.add("live-red");       // apply red LIVE LED
     });
 
     audioRadio.src = station.url;
-    audioRadio.volume = volSlider.value / 100;
+
+    // Save the real target volume
+    const targetVolume = volSlider.value / 100;
 
     audioRadio.load();
-    audioRadio.play().then(() => {
-        isPlaying = true;
-        updateBarAnimation();
-        setPlayIcon(true);
-        fadeIn(audioRadio);
-        ledVol.classList.add("playing");
-    }).catch(() => {
-        isPlaying = false;
-        updateBarAnimation();
+
+    // ⭐ 3‑second silent warm‑up ONLY for Atlantic Radio UK
+    if (station.name === "Atlantic Radio UK") {
+
         setPlayIcon(false);
-        ledVol.classList.remove("playing");
-    });
+
+        // Start playing immediately but muted
+        audioRadio.volume = 0;
+
+        audioRadio.play().then(() => {
+            isPlaying = true;
+            updateBarAnimation();
+            ledVol.classList.add("playing");
+
+            // After 3 seconds, jump straight to full volume (no fade)
+            setTimeout(() => {
+                audioRadio.volume = targetVolume;
+                setPlayIcon(true);
+            }, 3000);
+
+        }).catch(() => {
+            isPlaying = false;
+            updateBarAnimation();
+            setPlayIcon(false);
+            ledVol.classList.remove("playing");
+        });
+
+    } else {
+
+        // Normal instant play for all other stations
+        audioRadio.volume = targetVolume;
+
+        audioRadio.play().then(() => {
+            isPlaying = true;
+            updateBarAnimation();
+            setPlayIcon(true);
+            fadeIn(audioRadio); // your normal fade behaviour
+            ledVol.classList.add("playing");
+        }).catch(() => {
+            isPlaying = false;
+            updateBarAnimation();
+            setPlayIcon(false);
+            ledVol.classList.remove("playing");
+        });
+    }
 
     audioRadio.onpause = () => {
         isPlaying = false;
@@ -1586,72 +1632,6 @@ const shuffleState = {
     };
 }
 
-
-
-    function playNextMp3(mode) {
-        const playlist = mode === MODE_MP3_1 ? playlist1 : playlist2;
-        const audio = mode === MODE_MP3_1 ? audioMp3_1 : audioMp3_2;
-
-        if (!playlist.length) {
-            updateSonyHeader(
-                mode === MODE_MP3_1 ? "NO TRACKS IN MP3 1" : "NO TRACKS IN MP3 2",
-                "ADD PLAYLIST",
-                true
-            );
-            isPlaying = false;
-            updateBarAnimation();
-            setPlayIcon(false);
-            return;
-        }
-
-        const index = getNextTrack(mode);
-        if (index === null) return;
-
-        const track = playlist[index];
-
-        radioScreenLine2.classList.remove("live-red");
-        updateSonyHeader(
-            mode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2",
-            ""
-        );
-
-        audio.src = fixPath(track.url);
-
-        const v = Math.round(parseInt(volSlider.value) / 10) * 10;
-        audio.volume = v / 100;
-
-        audio.load();
-
-        audio.play().then(() => {
-            isPlaying = true;
-            updateBarAnimation();
-            setPlayIcon(true);
-            ledVol.classList.add("playing");
-            fadeIn(audio);
-            updateMp3Title(track.url);
-        }).catch(() => {
-            isPlaying = false;
-            updateBarAnimation();
-            setPlayIcon(false);
-        });
-
-        audio.onpause = () => {
-            isPlaying = false;
-            updateBarAnimation();
-            ledVol.classList.remove("playing");
-        };
-
-        audio.onerror = () => {
-            isPlaying = false;
-            updateBarAnimation();
-        };
-
-        audio.onended = () => {
-            isPlaying = false;
-            updateBarAnimation();
-            playNextMp3(mode);
-        };
-    }
 
     function setPlayIcon(playing) {
         iconPlay.style.display = playing ? "none" : "block";
@@ -1668,114 +1648,166 @@ const shuffleState = {
     }
 
     function switchMode(mode) {
-        if (mode === currentMode) return;
+    if (mode === currentMode) return;
 
-        stopAll();
-        isPlaying = false;
-        updateBarAnimation();
-        setPlayIcon(false);
+    stopAll();
+    isPlaying = false;
+    updateBarAnimation();
+    setPlayIcon(false);
 
-        ledRadio.classList.remove("active");
-        ledUsb.classList.remove("active");
+    ledRadio.classList.remove("active");
+    ledUsb.classList.remove("active");
 
-        currentMode = mode;
+    currentMode = mode;
 
-        btnRadio.classList.toggle("active", mode === MODE_RADIO);
-        btnMp3_1.classList.toggle("active", mode === MODE_MP3_1);
-        btnMp3_2.classList.toggle("active", mode === MODE_MP3_2);
+    btnRadio.classList.toggle("active", mode === MODE_RADIO);
+    btnMp3_1.classList.toggle("active", mode === MODE_MP3_1);
+    btnMp3_2.classList.toggle("active", mode === MODE_MP3_2);
 
-        if (mode === MODE_RADIO) {
-    ledRadio.classList.add("active");
+    if (mode === MODE_RADIO) {
+        ledRadio.classList.add("active");
 
-    transportRow.style.display = "flex";
-    btnPrev.style.display = "flex";
-    mp3ControlsRow.style.display = "none";
+        transportRow.style.display = "flex";
+        btnPrev.style.display = "flex";
+        mp3ControlsRow.style.display = "none";
 
-    // 1) Update header first
-    updateSonyHeader("LOADING", "LIVE", true);
+        updateSonyHeader("LOADING", "LIVE", true);
 
-    // 2) Apply red LED AFTER header update
-    requestAnimationFrame(() => {
-        radioScreenLine2.classList.add("live-red");
-    });
+        requestAnimationFrame(() => {
+            radioScreenLine2.classList.add("live-red");
+        });
 
-    // 3) Now safely load radio
-    audioRadio.src = radioItems[currentRadioIndex].url;
-    audioRadio.load();
-    playRadio(currentRadioIndex);
+        const station = radioItems[currentRadioIndex];
+        audioRadio.src = station.url;
+        audioRadio.load();
 
+        playRadio(currentRadioIndex);
 
-        } else {
-            ledUsb.classList.add("active");
+    } else {
+        ledUsb.classList.add("active");
 
-            transportRow.style.display = "none";
-            btnPrev.style.display = "none";
-            mp3ControlsRow.style.display = "flex";
+        transportRow.style.display = "none";
+        btnPrev.style.display = "none";
+        mp3ControlsRow.style.display = "flex";
 
-            radioScreenLine2.classList.remove("live-red");
+        radioScreenLine2.classList.remove("live-red");
 
-            const headerLine2 =
-                mode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2";
+        const headerLine2 =
+            mode === MODE_MP3_1 ? "MP3 PLAYER 1" : "MP3 PLAYER 2";
 
-            updateSonyHeader("LOADING", headerLine2, false);
+        updateSonyHeader("LOADING", headerLine2, false);
 
-            audioRadio.pause();
-            audioRadio.src = "";
+        audioRadio.pause();
+        audioRadio.src = "";
 
-            playNextMp3(mode);
-        }
+        // ⭐ FIX: safe MP3 start (prevents LOADING freeze)
+        setTimeout(() => {
+            const playlist = mode === MODE_MP3_1 ? playlist1 : playlist2;
+
+            if (playlist.length > 0) {
+                playNextMp3(mode);
+            } else {
+                updateSonyHeader(
+                    mode === MODE_MP3_1 ? "NO TRACKS IN MP3 1" : "NO TRACKS IN MP3 2",
+                    "ADD PLAYLIST",
+                    true
+                );
+            }
+        }, 50);
+    }
+}
+
+function playNextMp3(mode) {
+    const playlist = mode === MODE_MP3_1 ? playlist1 : playlist2;
+    const audio = mode === MODE_MP3_1 ? audioMp3_1 : audioMp3_2;
+
+    if (!playlist.length) {
+        updateSonyHeader(
+            mode === MODE_MP3_1 ? "NO TRACKS IN MP3 1" : "NO TRACKS IN MP3 2",
+            "ADD PLAYLIST",
+            true
+        );
+        return;
     }
 
-    mp3Back15.addEventListener("click", () => {
-        const audio = getCurrentAudio();
-        if (audio) audio.currentTime = Math.max(0, audio.currentTime - 15);
-    });
+    const nextIndex = getNextTrack(mode);
+    const entry = playlist[nextIndex];
 
-    mp3Forward15.addEventListener("click", () => {
-        const audio = getCurrentAudio();
-        if (audio && audio.duration)
-            audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
-    });
+    // entry.name and entry.url are now used correctly
+    updateMp3Title(entry.name);
 
-    mp3PlayPause.addEventListener("click", () => {
-        const audio = getCurrentAudio();
-        if (!audio) return;
+    audio.src = fixPath(entry.url);
+    audio.volume = volSlider.value / 100;
 
-        if (audio.paused) {
-            audio.play();
-        } else {
-            audio.pause();
-        }
-    });
-
-    mp3Next.addEventListener("click", () => {
-        if (currentMode === MODE_MP3_1) playNextMp3(MODE_MP3_1);
-        if (currentMode === MODE_MP3_2) playNextMp3(MODE_MP3_2);
-    });
-
-    audioMp3_1.onplay = audioMp3_2.onplay = () => {
+    audio.play().then(() => {
         isPlaying = true;
         updateBarAnimation();
         ledVol.classList.add("playing");
         mp3PlayPause.textContent = "⏸";
-    };
-
-    audioMp3_1.onpause = audioMp3_2.onpause = () => {
+    }).catch(() => {
         isPlaying = false;
         updateBarAnimation();
         ledVol.classList.remove("playing");
         mp3PlayPause.textContent = "▶";
-    };
-
-    btnRadio.addEventListener("click", () => switchMode(MODE_RADIO));
-    btnMp3_1.addEventListener("click", () => switchMode(MODE_MP3_1));
-    btnMp3_2.addEventListener("click", () => switchMode(MODE_MP3_2));
-
-    btnPrev.addEventListener("click", () => {
-        if (currentMode === MODE_RADIO) playRadio(currentRadioIndex - 1);
     });
+}
 
-    btnNext.addEventListener("click", () => {
+
+ 
+
+    mp3Back15.addEventListener("click", () => {
+    const audio = getCurrentAudio();
+    if (audio) audio.currentTime = Math.max(0, audio.currentTime - 15);
+});
+
+mp3Forward15.addEventListener("click", () => {
+    const audio = getCurrentAudio();
+    if (audio && audio.duration)
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
+});
+
+mp3PlayPause.addEventListener("click", () => {
+    const audio = getCurrentAudio();
+    if (!audio) return;
+
+    // ⭐ FIX: ensure MP3 players get correct volume
+    audio.volume = volSlider.value / 100;
+
+    if (audio.paused) {
+        audio.play();
+    } else {
+        audio.pause();
+    }
+});
+
+mp3Next.addEventListener("click", () => {
+    if (currentMode === MODE_MP3_1) playNextMp3(MODE_MP3_1);
+    if (currentMode === MODE_MP3_2) playNextMp3(MODE_MP3_2);
+});
+
+audioMp3_1.onplay = audioMp3_2.onplay = () => {
+    isPlaying = true;
+    updateBarAnimation();
+    ledVol.classList.add("playing");
+    mp3PlayPause.textContent = "⏸";
+};
+
+audioMp3_1.onpause = audioMp3_2.onpause = () => {
+    isPlaying = false;
+    updateBarAnimation();
+    ledVol.classList.remove("playing");
+    mp3PlayPause.textContent = "▶";
+};
+
+btnRadio.addEventListener("click", () => switchMode(MODE_RADIO));
+btnMp3_1.addEventListener("click", () => switchMode(MODE_MP3_1));
+btnMp3_2.addEventListener("click", () => switchMode(MODE_MP3_2));
+
+btnPrev.addEventListener("click", () => {
+    if (currentMode === MODE_RADIO) playRadio(currentRadioIndex - 1);
+});
+
+btnNext.addEventListener("click", () => {
     if (currentMode === MODE_RADIO) {
         playRadio(currentRadioIndex + 1);
     } else if (currentMode === MODE_MP3_1 || currentMode === MODE_MP3_2) {
@@ -1805,7 +1837,7 @@ btnPlayPause.addEventListener("click", () => {
         setPlayIcon(false);
         updateBarAnimation();
         ledVol.classList.remove("playing");
-    }
+   }
 });
 
 /* ===========================
