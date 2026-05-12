@@ -1425,7 +1425,6 @@ document.addEventListener("DOMContentLoaded", function () {
     /* RADIO STATIONS */
     const radioItems = [
         { name: "Super Q Radio UK", url: "https://hello.citrus3.com:8184/stream?type=http" },
-        { name: "Atlantic Radio UK", url: "https://cwilli00.radioca.st/stream" },
         { name: "Atlantic Extra", url: "https://cwilliams78.radioca.st/stream" },
         { name: "Hot 103 & 97", url: "https://a9.asurahosting.com:7640/radio.mp3" },
         { name: "Original Hot 103", url: "https://streaming.live365.com/a77423" },
@@ -1798,6 +1797,17 @@ audioMp3_1.onpause = audioMp3_2.onpause = () => {
     ledVol.classList.remove("playing");
     mp3PlayPause.textContent = "▶";
 };
+
+audioMp3_1.onended = () => {
+    playNextMp3(MODE_MP3_1);
+};
+
+audioMp3_2.onended = () => {
+    playNextMp3(MODE_MP3_2);
+};
+
+
+
 
 btnRadio.addEventListener("click", () => switchMode(MODE_RADIO));
 btnMp3_1.addEventListener("click", () => switchMode(MODE_MP3_1));
