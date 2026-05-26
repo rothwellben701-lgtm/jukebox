@@ -1038,6 +1038,15 @@ document.addEventListener("DOMContentLoaded", function () {
 { name: "Celine Dion - Treat Her Like A Lady (The Metro Club Mix).mp3", url: "Songs 2/Celine Dion - Treat Her Like A Lady (The Metro Club Mix).mp3" },
 { name: "Chaka Khan - Love of a lifetime.mp3", url: "Songs 2/Chaka Khan - Love of a lifetime.mp3" },
 { name: "Chappell Roan - The Subway.mp3", url: "Songs 2/Chappell Roan - The Subway.mp3" },
+{ name: "Girls Aloud - Call The Shots.mp3", url: "Songs 2/Girls Aloud - Call The Shots.mp3" },
+{ name: "Natalie Imbruglia - Wrong Impression.mp3", url: "Songs 2/Natalie Imbruglia - Wrong Impression.mp3" },
+{ name: "Victoria Beckham - A Mind Of Its Own.mp3", url: "Songs 2/Victoria Beckham - A Mind Of Its Own.mp3" },
+{ name: "Joel Corry - Hey DJ.mp3", url: "Songs 2/Joel Corry - Hey DJ.mp3" },
+{ name: "Tones And I - Favour.mp3", url: "Songs 2/Tones And I - Favour.mp3" },
+{ name: "Pickettywitch - That Same Old Feeling.mp3", url: "Songs 2/Pickettywitch - That Same Old Feeling.mp3" },
+{ name: "Mix1.mp3", url: "Songs 2/Mix1.mp3" },
+{ name: "Mix2.mp3", url: "Songs 2/Mix2.mp3" },
+{ name: "Flume - Never Be Like You.mp3", url: "Songs 2/Flume - Never Be Like You.mp3" },
 { name: "Charli xcx - 3AM (Pull Up).mp3", url: "Songs 2/Charli xcx - 3AM (Pull Up).mp3" },
 { name: "Charlie Brown - On My Way.mp3", url: "Songs 2/Charlie Brown - On My Way.mp3" },
 { name: "Chart Collective - Homely Girl.mp3", url: "Songs 2/Chart Collective - Homely Girl.mp3" },
@@ -1946,8 +1955,9 @@ const now = new Date();
 const hour = now.getHours();
 const minute = now.getMinutes();
 
-// Night starts at 21:30 (9:30 PM) and runs until 06:00
-const isNight = (hour > 21 || (hour === 21 && minute >= 30) || hour < 6);
+// Night starts at 21:30 (9:30 PM) and runs until 05:00
+const isNight = (hour > 21 || (hour === 21 && minute >= 30) || hour < 5);
+
 
 const chosenBackground = isNight
     ? nightBackgrounds[Math.floor(Math.random() * nightBackgrounds.length)]
